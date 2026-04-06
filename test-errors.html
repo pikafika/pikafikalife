@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Errs</title>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+       document.body.innerHTML += "<p style='color:red'>" + msg + " at " + line + "</p>";
+    };
+  </script>
+</head>
+<body>
+<script>
+// Mock DOM elements to prevent null errors just for loading script
+</script>
+<!-- Copy index.html content here to test fully -->
+</body>
+</html>

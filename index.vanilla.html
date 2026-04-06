@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🩵 인슐린 계산기 | 1형 당뇨 스마트 도우미</title>
+  <meta name="description" content="1형 당뇨 환자와 가족을 위한 스마트 탄수화물 & 식사 인슐린 계산기. 한국 음식 DB 내장, ICR/ISF 개인 설정, 안전 경고 기능 제공." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=6" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="app-wrapper" id="app">
+
+  <!-- ====== 상단 헤더 ====== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo-area">
+        <span class="logo-icon">🩵</span>
+        <div>
+          <h1 class="logo-title" id="headerTitle">오늘</h1>
+          <p class="logo-sub">1형 당뇨 스마트 도우미</p>
+        </div>
+      </div>
+      <div class="header-actions" id="headerActions"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- 경고 배너 -->
+    <div class="alert-banner" id="alertBanner" role="alert" aria-live="assertive">
+      <span class="alert-icon">⚠️</span>
+      <p class="alert-text">용량이 평소보다 많습니다. 다시 한 번 확인해 주세요!</p>
+      <button class="alert-close" id="alertClose" aria-label="경고 닫기">✕</button>
+    </div>
+
+    <!-- ===== VIEW 1: 오늘 (홈) ===== -->
+    <section class="view active" id="view-today">
+
+      <!-- 저혈당 응급 카드 -->
+      <div class="emergency-card" id="emergencyCard">
+        <button class="emergency-toggle" id="emergencyToggle" aria-expanded="false">
+          <span>🚨 저혈당 긴급 대처 (70mg/dL 이하)</span>
+          <span class="emergency-chevron">▼</span>
+        </button>
+        <div class="emergency-body hidden" id="emergencyBody">
+          <p class="emergency-rule"><strong>15-15 법칙:</strong> 빠른 당분 <strong>15g</strong> 섭취 → 15분 대기 → 재측정</p>
+          <div class="emergency-items">
+            <div class="emergency-item">🧃 주스 반 컵 (120ml)</div>
+            <div class="emergency-item">🍬 사탕 3~4개</div>
+            <div class="emergency-item">💊 포도당정 3~4알</div>
+            <div class="emergency-item">🥤 콜라 반 컵 (120ml)</div>
+          </div>
+          <p class="emergency-note">⚠️ 15분 후에도 70 이하면 반복. 의식이 없으면 즉시 119!</p>
+        </div>
+      </div>
+
+      <!-- 마지막 혈당 상태 카드 -->
+      <div class="card today-bg-card" id="todayBGCard">
+        <div class="today-bg-inner">
+          <div class="today-bg-left">
+            <p class="today-bg-label">마지막 측정 혈당</p>
+            <div class="today-bg-value-row">
+              <span class="today-bg-value" id="todayLastBG">—</span>
+              <span class="today-bg-unit">mg/dL</span>
+            </div>
+            <p class="today-bg-time" id="todayLastBGTime">아직 기록이 없어요</p>
+          </div>
+          <div class="today-bg-badge" id="todayBGBadge"></div>
+        </div>
+      </div>
+
+      <!-- 오늘 요약 통계 4개 -->
+      <div class="today-stats-grid">
+        <div class="today-stat-card">
+          <span class="today-stat-icon">🍽️</span>
+          <span class="today-stat-value" id="statMealCount">0회</span>
+          <span class="today-stat-label">오늘 식사</span>
+        </div>
+        <div class="today-stat-card">
+          <span class="today-stat-icon">🌾</span>
+          <span class="today-stat-value" id="statTotalCarbs">0g</span>
+          <span class="today-stat-label">총 탄수화물</span>
+        </div>
+        <div class="today-stat-card">
+          <span class="today-stat-icon">💉</span>
+          <span class="today-stat-value" id="statTotalInsulin">0u</span>
+          <span class="today-stat-label">총 인슐린</span>
+        </div>
+        <div class="today-stat-card">
+          <span class="today-stat-icon">🩸</span>
+          <span class="today-stat-value" id="statAvgBG">—</span>
+          <span class="today-stat-label">평균 혈당</span>
+        </div>
+      </div>
+
+      <!-- 추이 차트 -->
+      <div class="card">
+        <div class="chart-header-row">
+          <h2 class="view-title">📈 혈당 & 인슐린 추이</h2>
+          <div class="period-tabs">
+            <button class="period-tab active" data-period="today">오늘</button>
+            <button class="period-tab" data-period="week">7일</button>
+            <button class="period-tab" data-period="month">30일</button>
+          </div>
+        </div>
+        <div class="chart-container" style="position: relative; height: 220px; width: 100%;">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 시간대 코칭 카드 -->
+      <div class="card today-coaching-card" id="todayCoaching"></div>
+
+    </section>
+
+    <!-- ===== VIEW 2: 인슐린 계산기 ===== -->
+    <section class="view" id="view-calculator">
+
+      <!-- 식사 프리셋 바 -->
+      <div class="preset-bar" id="presetBar" style="display:none;">
+        <span class="preset-bar-label">⭐ 저장된 식사</span>
+        <div class="preset-chips" id="presetChips"></div>
+      </div>
+
+      <!-- STEP 1: 혈당 입력 -->
+      <section class="card step-card" id="stepBG">
+        <div class="step-header">
+          <span class="step-badge">1</span>
+          <div>
+            <h2 class="step-title">지금 혈당이 얼마예요? 🩸</h2>
+            <p class="step-desc">식사 전 혈당을 입력해줘요</p>
+          </div>
+        </div>
+        <div class="bg-input-row">
+          <input type="number" id="inputBG" class="big-input" placeholder="예) 150"
+            min="40" max="600" inputmode="numeric" aria-label="현재 혈당 입력 (mg/dL)" />
+          <span class="unit-label">mg/dL</span>
+        </div>
+        <div class="quick-btns" role="group" aria-label="빠른 혈당 선택">
+          <button class="quick-btn" data-bg="70">70</button>
+          <button class="quick-btn" data-bg="90">90</button>
+          <button class="quick-btn" data-bg="110">110</button>
+          <button class="quick-btn" data-bg="130">130</button>
+          <button class="quick-btn" data-bg="150">150</button>
+          <button class="quick-btn" data-bg="180">180</button>
+          <button class="quick-btn" data-bg="220">220</button>
+          <button class="quick-btn" data-bg="270">270</button>
+        </div>
+      </section>
+
+      <!-- STEP 2: 음식 선택 -->
+      <section class="card step-card" id="stepFood">
+        <div class="step-header">
+          <span class="step-badge">2</span>
+          <div>
+            <h2 class="step-title">뭐 먹을 거예요? 🍱</h2>
+            <p class="step-desc">음식을 검색하거나 직접 탄수화물을 입력하세요</p>
+          </div>
+        </div>
+        <div class="search-row">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="foodSearch" class="search-input"
+              placeholder="음식 이름 검색... (예: 공깃밥, 떡볶이)"
+              autocomplete="off" aria-label="음식 검색"
+              aria-autocomplete="list" aria-controls="searchDropdown" />
+          </div>
+          <div class="search-dropdown" id="searchDropdown" role="listbox" aria-label="음식 검색 결과"></div>
+        </div>
+        <div class="category-tabs" role="tablist" aria-label="음식 카테고리">
+          <button class="cat-tab active" data-cat="all" role="tab" aria-selected="true">전체</button>
+          <button class="cat-tab" data-cat="rice" role="tab">밥류</button>
+          <button class="cat-tab" data-cat="noodle" role="tab">면류</button>
+          <button class="cat-tab" data-cat="snack" role="tab">분식</button>
+          <button class="cat-tab" data-cat="bread" role="tab">빵/과자</button>
+          <button class="cat-tab" data-cat="fruit" role="tab">과일</button>
+          <button class="cat-tab" data-cat="drink" role="tab">음료</button>
+          <button class="cat-tab" data-cat="side" role="tab">반찬</button>
+          <button class="cat-tab" data-cat="cvs" role="tab">편의점</button>
+          <button class="cat-tab" data-cat="frozen" role="tab">냉동식품</button>
+        </div>
+        <div class="food-grid" id="foodGrid" role="list" aria-label="음식 목록"></div>
+        <div class="manual-input-section">
+          <button class="toggle-manual-btn" id="toggleManual" aria-expanded="false" aria-controls="manualInputArea">
+            ✏️ 탄수화물 직접 입력하기
+          </button>
+          <div class="manual-input-area hidden" id="manualInputArea">
+            <div class="manual-row">
+              <input type="text" id="manualFoodName" class="text-input" placeholder="음식 이름 (선택)" />
+              <input type="number" id="manualCarbs" class="num-input" placeholder="탄수화물 (g)" min="0" max="500" inputmode="decimal" />
+              <button class="btn-add" id="btnManualAdd">추가</button>
+            </div>
+          </div>
+        </div>
+        <div class="selected-foods-area" id="selectedFoodsArea">
+          <div class="selected-header">
+            <h3 class="selected-title">🛒 내 식사 목록</h3>
+            <div class="selected-header-btns">
+              <button class="btn-save-preset" id="btnSavePreset" title="이 조합을 프리셋으로 저장">⭐ 저장</button>
+              <button class="btn-clear-all" id="btnClearAll" aria-label="모든 음식 삭제">전체 삭제</button>
+            </div>
+          </div>
+          <div class="selected-list" id="selectedList" aria-live="polite"></div>
+          <div class="total-carbs-row" id="totalCarbsRow">
+            <span class="total-label">총 탄수화물</span>
+            <span class="total-value" id="totalCarbsDisplay">0g</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: 계산 결과 -->
+      <section class="card result-card" id="stepResult">
+        <div class="step-header">
+          <span class="step-badge result-badge">💉</span>
+          <div>
+            <h2 class="step-title">인슐린 용량 계산 결과</h2>
+            <p class="step-desc" id="resultTime"></p>
+          </div>
+        </div>
+        <button class="btn-calculate" id="btnCalculate">인슐린 계산하기</button>
+        <div class="result-display" id="resultDisplay">
+          <div class="result-main-box" id="resultMainBox">
+            <p class="result-label-top">지금 맞아야 할 인슐린은</p>
+            <div class="result-dose-row">
+              <span class="result-dose" id="resultDose">—</span>
+              <span class="result-unit">단위</span>
+            </div>
+            <p class="result-label-bottom">입니다 💉</p>
+          </div>
+          <div class="result-breakdown" id="resultBreakdown">
+            <div class="breakdown-item">
+              <span class="breakdown-label">🍚 식사 인슐린</span>
+              <span class="breakdown-value" id="mealInsulin">—</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="breakdown-label">🩸 교정 인슐린</span>
+              <span class="breakdown-value" id="corrInsulin">—</span>
+            </div>
+            <div class="breakdown-divider"></div>
+            <div class="breakdown-item total">
+              <span class="breakdown-label">합계 (소수점)</span>
+              <span class="breakdown-value" id="totalInsulinRaw">—</span>
+            </div>
+            <div class="breakdown-item total">
+              <span class="breakdown-label">합계 (반올림)</span>
+              <span class="breakdown-value" id="totalInsulinRounded">—</span>
+            </div>
+          </div>
+          <div class="coaching-guide-box" id="coachingGuideBox" style="display: none;">
+            <h3 class="coaching-title">💡 실생활 코칭 가이드</h3>
+            <ul class="coaching-list" id="coachingList"></ul>
+          </div>
+          <div class="rounding-option">
+            <label class="toggle-label" for="toggleRounding">
+              <span>0.5단위로 반올림</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="toggleRounding" role="switch" />
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+          <div class="share-row">
+            <button class="btn-share" id="btnShareClipboard">📋 결과 복사</button>
+            <button class="btn-share btn-share-kakao" id="btnShareKakao">💬 카카오 공유</button>
+          </div>
+          <p class="share-hint">📌 부모님께 공유하거나 클립보드에 복사할 수 있어요</p>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ===== VIEW 3: 기록 ===== -->
+    <section class="view" id="view-records">
+      <div class="card records-header-card">
+        <div class="records-top-row">
+          <h2 class="view-title">📓 나의 기록</h2>
+          <button class="btn-export" id="btnExportRecords">📤 내보내기</button>
+        </div>
+        <p class="step-desc">✔️ 실제 식사 체크 시 오늘 탭 차트에 반영돼요</p>
+        <button class="btn-clear-history" id="btnClearHistoryMain" style="margin-top:12px;">🗑️ 전체 기록 삭제</button>
+      </div>
+      <div id="mainHistoryList"></div>
+    </section>
+
+    <!-- ===== VIEW 4: 정보 ===== -->
+    <section class="view" id="view-info">
+
+      <!-- 정보 탭 바 -->
+      <div class="info-tab-bar">
+        <button class="info-tab active" data-infotab="food">🍚 음식 DB</button>
+        <button class="info-tab" data-infotab="guide">📖 생활 가이드</button>
+        <button class="info-tab" data-infotab="emergency">🚨 응급 처치</button>
+      </div>
+
+      <!-- 음식 DB 섹션 -->
+      <div class="info-section active" id="infoSectionFood">
+        <div class="card">
+          <h2 class="view-title" style="margin-bottom:12px;">📚 전체 음식 정보</h2>
+          <div class="search-row">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="dbSearch" class="search-input" placeholder="음식 검색 (예: 떡볶이)" />
+            </div>
+          </div>
+          <div class="category-tabs" id="dbCategoryTabs" role="tablist">
+            <button class="cat-tab active" data-dbcat="all">전체</button>
+            <button class="cat-tab" data-dbcat="rice">밥류</button>
+            <button class="cat-tab" data-dbcat="noodle">면류</button>
+            <button class="cat-tab" data-dbcat="snack">분식</button>
+            <button class="cat-tab" data-dbcat="bread">빵/과자</button>
+            <button class="cat-tab" data-dbcat="fruit">과일</button>
+            <button class="cat-tab" data-dbcat="drink">음료</button>
+            <button class="cat-tab" data-dbcat="side">반찬</button>
+            <button class="cat-tab" data-dbcat="cvs">편의점</button>
+            <button class="cat-tab" data-dbcat="frozen">냉동식품</button>
+          </div>
+          <div class="db-list" id="dbList"></div>
+        </div>
+      </div>
+
+      <!-- 생활 가이드 섹션 -->
+      <div class="info-section" id="infoSectionGuide"></div>
+
+      <!-- 응급 처치 섹션 -->
+      <div class="info-section" id="infoSectionEmergency"></div>
+
+    </section>
+
+  </main>
+
+  <!-- ====== 바텀 네비게이션 ====== -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-target="view-today">
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>
+      <span class="nav-text">오늘</span>
+    </button>
+    <button class="nav-item" data-target="view-calculator">
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg></span>
+      <span class="nav-text">계산기</span>
+    </button>
+    <button class="nav-item" data-target="view-records">
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M9 10h6"/><path d="M9 14h6"/><path d="M9 18h4"/></svg></span>
+      <span class="nav-text">기록</span>
+      <span class="nav-badge" id="recordsBadge" style="display:none;">0</span>
+    </button>
+    <button class="nav-item" data-target="view-info">
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></span>
+      <span class="nav-text">정보</span>
+    </button>
+  </nav>
+
+  <!-- ====== 개인 설정 바텀 시트 ====== -->
+  <div class="modal-overlay" id="settingsSheet" role="dialog" aria-modal="true">
+    <div class="bottom-sheet">
+      <div class="sheet-drag-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">⚙️ 개인 설정</h2>
+        <button class="modal-close" id="settingsClose" aria-label="설정 닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="margin-top:0; margin-bottom:4px; color:var(--primary); font-size:14px;">필수 정보 (계산기용)</h4>
+        <div class="setting-group">
+          <label class="setting-label" for="settingICR">💉 당질지수 (ICR) <span class="setting-hint">탄수화물 몇g당 1단위?</span></label>
+          <div class="setting-input-row">
+            <input type="number" id="settingICR" class="setting-input" min="1" max="50" step="0.5" value="10" />
+            <span class="setting-unit">g / 1단위</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label" for="settingISF">📉 교정계수 (ISF) <span class="setting-hint">1단위당 혈당 하락 폭</span></label>
+          <div class="setting-input-row">
+            <input type="number" id="settingISF" class="setting-input" min="10" max="200" step="1" value="50" />
+            <span class="setting-unit">mg/dL / 1단위</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label" for="settingTargetBG">🎯 목표 혈당 <span class="setting-hint">식후 도달 목표 수치</span></label>
+          <div class="setting-input-row">
+            <input type="number" id="settingTargetBG" class="setting-input" min="70" max="200" step="1" value="120" />
+            <span class="setting-unit">mg/dL</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label" for="settingWarningThreshold">⚠️ 과용량 경고 기준</label>
+          <div class="setting-input-row">
+            <input type="number" id="settingWarningThreshold" class="setting-input" min="1" max="30" step="0.5" value="10" />
+            <span class="setting-unit">단위 이상시</span>
+          </div>
+        </div>
+        <div class="breakdown-divider" style="margin: 10px 0;"></div>
+        <h4 style="margin-top:0; margin-bottom:4px; color:var(--primary); font-size:14px;">추가 관리 정보 (참고용)</h4>
+        <div class="setting-group">
+          <label class="setting-label" for="settingWeight">⚖️ 체중</label>
+          <div class="setting-input-row">
+            <input type="number" id="settingWeight" class="setting-input" min="10" max="150" step="0.1" placeholder="예: 60" />
+            <span class="setting-unit">kg</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label" for="settingBasal">🌌 기저 인슐린 (하루 단위량)</label>
+          <div class="setting-input-row">
+            <input type="number" id="settingBasal" class="setting-input" min="0" max="100" step="1" placeholder="예: 14" />
+            <span class="setting-unit">단위/일</span>
+          </div>
+        </div>
+        <button class="btn-save-settings" id="btnSaveSettings">✅ 설정 저장</button>
+        <p class="settings-saved-msg" id="settingsSavedMsg"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 프리셋 이름 지정 모달 ====== -->
+  <div class="modal-overlay" id="presetNameModal" role="dialog" aria-modal="true">
+    <div class="modal-box modal-box--small">
+      <div class="modal-header">
+        <h2 class="modal-title">⭐ 식사 프리셋 저장</h2>
+        <button class="modal-close" id="presetNameClose" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">이 식사 조합에 이름을 붙여주세요</p>
+        <input type="text" id="presetNameInput" class="text-input" placeholder="예: 학교 점심, 집밥..." style="width:100%; margin-bottom:12px;" />
+        <button class="btn-save-settings" id="btnConfirmPreset">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 음식 추가 모달 ====== -->
+  <div class="modal-overlay" id="addFoodModal" role="dialog" aria-modal="true" aria-labelledby="addFoodTitle">
+    <div class="modal-box modal-box--small">
+      <div class="modal-header">
+        <h2 class="modal-title" id="addFoodTitle">🍽️ 음식 추가</h2>
+        <button class="modal-close" id="addFoodClose" aria-label="음식 추가 닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="add-food-info" id="addFoodInfo"></div>
+        <div class="add-food-qty-row">
+          <label class="setting-label" for="addFoodQty">수량 / 양</label>
+          <div class="qty-controls">
+            <button class="qty-btn" id="qtyMinus" aria-label="수량 감소">−</button>
+            <input type="number" id="addFoodQty" class="qty-input" value="1" min="0.1" step="0.5" />
+            <button class="qty-btn" id="qtyPlus" aria-label="수량 증가">+</button>
+            <span class="qty-unit" id="addFoodUnit">인분</span>
+          </div>
+          <p class="qty-carbs-preview" id="qtyCarbsPreview">탄수화물: 0g</p>
+        </div>
+        <button class="btn-save-settings" id="btnConfirmAdd">🛒 식사 목록에 추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 토스트 알림 ====== -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</div>
+
+<script src="data.js?v=5"></script>
+<script src="app.js?v=5"></script>
+</body>
+</html>
