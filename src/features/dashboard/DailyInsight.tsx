@@ -1,6 +1,6 @@
 import React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PlayIcon, Book02Icon, StarIcon, TikkaMasalaIcon } from '@hugeicons/core-free-icons';
+import { PlayIcon, Book02Icon, StarIcon } from '@hugeicons/core-free-icons';
 
 import { INSIGHTS_DATA } from '../../data/insights_db';
 
