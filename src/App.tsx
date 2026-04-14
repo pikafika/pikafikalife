@@ -47,7 +47,13 @@ function App() {
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard />;
+        return (
+          <Dashboard 
+            onOpenAIReport={() => setIsAIReportOpen(true)}
+            onOpenStory={(index) => setSelectedStoryIndex(index)}
+            onOpenFamilyMgmt={() => setIsFamilyMgmtOpen(true)}
+          />
+        );
     }
   };
 
