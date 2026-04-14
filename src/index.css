@@ -13,8 +13,12 @@
   }
 }
 
+:root {
+  --viewport-bottom-offset: 0px;
+}
+
 .app-container {
-  @apply max-w-[500px] mx-auto min-h-screen bg-background flex flex-col relative;
+  @apply max-w-[500px] mx-auto min-h-dvh bg-background flex flex-col relative;
 }
 
 /* Custom Scrollbar for premium feel */

@@ -7,7 +7,7 @@ export interface InsightStory {
   title: string;
   label: string;
   color: string;
-  icon: React.ReactNode;
+  icon: string; // Emoji string for serialization stability
   content: {
     subtitle: string;
     description: string;
@@ -41,7 +41,7 @@ export const INSIGHTS_DATA: InsightStory[] = [
     title: '전문가 조언', 
     label: '운동 전 혈당 관리법', 
     color: 'bg-brand-100 text-brand-600', 
-    icon: <HugeiconsIcon icon={PlayIcon} size={14} />,
+    icon: '🏃‍♂️',
     content: {
       subtitle: '안전한 운동 시간대 추천',
       description: '운동 전 혈당이 100-150 사이에 있을 때가 가장 안전하고 효율적입니다.',
@@ -57,7 +57,7 @@ export const INSIGHTS_DATA: InsightStory[] = [
     title: '환우 이야기', 
     label: '나의 1형 당뇨 적응기', 
     color: 'bg-soft-purple text-brand-800', 
-    icon: <HugeiconsIcon icon={StarIcon} size={14} />,
+    icon: '✨',
     content: {
       subtitle: '동기 부여 인터뷰',
       description: '처음엔 막막했지만, 기록을 놀이처럼 생각하니 마음이 편해졌어요.',
@@ -73,7 +73,7 @@ export const INSIGHTS_DATA: InsightStory[] = [
     title: '레시피', 
     label: '저당 치즈 케이크 만들기', 
     color: 'bg-soft-green text-green-700', 
-    icon: <HugeiconsIcon icon={Book02Icon} size={14} />,
+    icon: '🍰',
     content: {
       subtitle: '홈베이킹 저당 버전',
       description: '설탕 대신 스테비아를 사용해 칼로리와 당을 획기적으로 낮춘 레시피입니다.',

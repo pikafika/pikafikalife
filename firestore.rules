@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. users 컬렉션 규칙: 자기 자신의 데이터만 읽고 쓰기 가능
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 2. families 컬렉션 규칙: 본인이 소속된 가족 그룹만 읽기 및 관리(쓰기) 가능
+    match /families/{familyId} {
+      // 문서의 members 맵/배열 안에 요청자의 uid가 존재하는지 확인
+      allow read, write: if request.auth != null && request.auth.uid in resource.data.members;
+      
+      // 가족 그룹 생성을 위한 예외 처리 (생성 시점에는 규칙이 다르게 적용될 수 있음)
+      allow create: if request.auth != null;
+      
+      // 3. 가족 그룹 내부의 logs(혈당 등 기록) 서브컬렉션 규칙
+      match /logs/{logId} {
+        // 상위 가족 문서의 members에 소속된 사용자만 로그 열람 및 작성 가능
+        allow read, write: if request.auth != null && 
+          request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
+      }
+    }
+  }
+}

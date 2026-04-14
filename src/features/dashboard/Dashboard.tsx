@@ -2,9 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import TrendChart from './TrendChart';
 import { DailyInsight } from './DailyInsight';
-import { INSIGHTS_DATA } from '../../data/insights_db';
-import { StoryViewer } from './StoryViewer';
-import { AIReportOverlay } from './AIReportOverlay';
+import { useAIStore } from '../../store/useAIStore';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
   CheckmarkBadge01Icon, 
@@ -19,6 +17,14 @@ import {
   ArrowUp01Icon
 } from '@hugeicons/core-free-icons';
 import { twMerge } from 'tailwind-merge';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useCloudSync } from '../../hooks/useCloudSync';
+
+interface DashboardProps {
+  onOpenAIReport: () => void;
+  onOpenStory: (index: number) => void;
+  onOpenFamilyMgmt: () => void;
+}
 
 const BGStatusDetail: React.FC<{ bg: number; isOpen: boolean; onToggle: () => void }> = ({ bg, isOpen, onToggle }) => {
   const getStatus = (bgValue: number) => {
@@ -79,11 +85,14 @@ const BGStatusDetail: React.FC<{ bg: number; isOpen: boolean; onToggle: () => vo
   );
 };
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC<DashboardProps> = ({ onOpenAIReport, onOpenStory, onOpenFamilyMgmt }) => {
+  useCloudSync(); // 로그인 시 데이터 동기화 시작
+  
   const { logs } = useHistoryStore();
-  const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
+  const { insights } = useAIStore();
+  const { user, login, logout } = useAuthStore();
+  
   const [isSeeAllOpen, setIsSeeAllOpen] = useState(false);
-  const [isAIReportOpen, setIsAIReportOpen] = useState(false);
   const [isBGExplanationOpen, setIsBGExplanationOpen] = useState(false);
 
   const { todayLogs, stats, lastBG, streakCount } = useMemo(() => {
@@ -91,7 +100,8 @@ const Dashboard: React.FC = () => {
     today.setHours(0, 0, 0, 0);
     const todayTime = today.getTime();
 
-    const filtered = logs.filter((log) => log.timestamp >= todayTime);
+    const safeLogs = Array.isArray(logs) ? logs : [];
+    const filtered = safeLogs.filter((log) => log && log.timestamp >= todayTime);
     
     const totalCarbs = filtered.reduce((acc, curr) => acc + (curr.totalCarbs || 0), 0);
     const totalInsulin = filtered.reduce((acc, curr) => acc + (curr.totalInsulin || 0), 0);
@@ -121,22 +131,65 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col space-y-8 pb-20">
-      {/* 헤더 & 환영 인사 */}
+      {/* 헤더 & 프로필 */}
       <section className="px-2">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[26px] font-black text-text-main leading-tight">
-              안녕하세요, <br />
-              사용자님!
+            <h2 className="text-[26px] font-black text-text-main leading-tight transition-all">
+              {user ? (
+                <>안녕하세요, <br /> {user?.displayName || '사용자'}님!</>
+              ) : (
+                <>데이터를 안전하게 <br /> 동기화해 보세요</>
+              )}
             </h2>
             <span className="text-[14px] text-text-muted font-bold mt-1 block">
               {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center border border-brand-100">
-            <HugeiconsIcon icon={ZapIcon} size={24} className="text-brand-500" strokeWidth={2.5} />
-          </div>
+          
+          {user ? (
+            <button 
+              onClick={logout}
+              className="relative group"
+            >
+              <img 
+                src={user.photoURL || ''} 
+                alt="Profile" 
+                className="w-14 h-14 rounded-3xl border-2 border-brand-100 shadow-md group-hover:scale-105 transition-all"
+              />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand-500 rounded-full border-2 border-white flex items-center justify-center">
+                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={12} color="white" strokeWidth={3} />
+              </div>
+            </button>
+          ) : (
+            <button 
+              onClick={login}
+              className="bg-brand-500 text-white px-5 py-3 rounded-2xl font-black text-[13px] shadow-lg shadow-brand-500/30 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <HugeiconsIcon icon={ZapIcon} size={16} strokeWidth={3} />
+              구글 로그인
+            </button>
+          )}
         </div>
+
+        {/* 가족 공유 안내 (로그인 시 노출) */}
+        {user && (
+          <div 
+            onClick={onOpenFamilyMgmt}
+            className="mb-6 p-4 bg-brand-50 rounded-3xl border border-brand-100 flex items-center justify-between group cursor-pointer hover:bg-brand-100 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white border border-brand-200 flex items-center justify-center">
+                <span className="text-[20px]">🏠</span>
+              </div>
+              <div>
+                <h4 className="text-[14px] font-black text-brand-700">우리 가족 공유 중</h4>
+                <p className="text-[11px] font-bold text-brand-400">함께 관리하는 기록 {logs.length}개</p>
+              </div>
+            </div>
+            <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="text-brand-300" strokeWidth={3} />
+          </div>
+        )}
 
         <div className="bg-white rounded-5xl p-8 shadow-premium border border-slate-50 flex flex-col items-center text-center relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-300 via-brand-500 to-brand-300"></div>
@@ -160,7 +213,7 @@ const Dashboard: React.FC = () => {
       </section>
 
       {/* 데일리 인사이트 (스토리 스타일) */}
-      <DailyInsight onSelectStory={setSelectedStoryIndex} onSeeAll={() => setIsSeeAllOpen(true)} />
+      <DailyInsight onSelectStory={onOpenStory} onSeeAll={() => setIsSeeAllOpen(true)} />
 
       {/* AI 데이터 리포트 스타일 코칭 */}
       <section className="px-2">
@@ -179,7 +232,7 @@ const Dashboard: React.FC = () => {
               "{coachingMessage}"
             </p>
             <button 
-              onClick={() => setIsAIReportOpen(true)}
+              onClick={onOpenAIReport}
               className="flex items-center gap-1.5 text-[12px] font-black text-brand-500 mt-4 ml-auto"
             >
               리포트 상세히 보기
@@ -287,19 +340,19 @@ const Dashboard: React.FC = () => {
           </header>
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             <p className="text-[14px] font-bold text-text-muted mb-4">
-              총 {INSIGHTS_DATA.length}개의 전문 지식이 준비되어 있습니다.
+              총 {insights.length}개의 전문 지식이 준비되어 있습니다.
             </p>
-            {INSIGHTS_DATA.map((insight, index) => (
+            {insights.map((insight, index) => (
               <button 
-                key={insight.id}
+                key={`${insight.id}-${index}`}
                 onClick={() => {
                   setIsSeeAllOpen(false);
-                  setSelectedStoryIndex(index);
+                  onOpenStory(index);
                 }}
                 className="w-full flex items-center gap-4 p-5 bg-white border border-slate-100 rounded-[32px] shadow-sm active:scale-[0.98] transition-all hover:shadow-premium group"
               >
                 <div className={twMerge("w-14 h-14 rounded-2xl flex items-center justify-center text-[24px] shrink-0", insight.color)}>
-                  {insight.icon}
+                  {typeof insight.icon === 'string' ? insight.icon : insight.icon}
                 </div>
                 <div className="text-left flex-1 min-w-0">
                   <span className="text-[11px] font-black text-brand-500 uppercase tracking-widest">{insight.title}</span>
@@ -319,23 +372,7 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Story Viewer Overlay */}
-      {selectedStoryIndex !== null && (
-        <StoryViewer 
-          stories={INSIGHTS_DATA} 
-          initialIndex={selectedStoryIndex} 
-          onClose={() => setSelectedStoryIndex(null)} 
-        />
-      )}
-
-      {/* AI Detailed Report Overlay */}
-      {isAIReportOpen && (
-        <AIReportOverlay 
-          stats={stats}
-          lastBG={lastBG}
-          onClose={() => setIsAIReportOpen(false)} 
-        />
-      )}
+      {/* 로컬 오버레이 렌더링 제거 (App.tsx로 이동함) */}
     </div>
   );
 };

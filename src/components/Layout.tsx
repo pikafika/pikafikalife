@@ -6,13 +6,17 @@ interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onOpenCalculator?: () => void;
 }
 
-export default function Layout({ children, activeTab, onTabChange }: LayoutProps) {
+import { useViewportHeight } from '../hooks/useViewportHeight';
+
+export default function Layout({ children, activeTab, onTabChange, onOpenCalculator }: LayoutProps) {
+  useViewportHeight(); // 뷰포트 변화 감지 및 CSS 변수(--viewport-bottom-offset) 업데이트
+
   const getTitle = () => {
     switch (activeTab) {
       case 'home': return '오늘';
-      case 'calculator': return '인슐린 계산기';
       case 'history': return '나의 기록';
       case 'family': return '가족 공유';
       case 'settings': return '설정';
@@ -21,8 +25,8 @@ export default function Layout({ children, activeTab, onTabChange }: LayoutProps
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-background font-sans text-text-main antialiased">
-      <div className="flex flex-col w-full max-w-[500px] bg-white min-h-screen relative shadow-premium border-x border-slate-50">
+    <div className="flex justify-center min-h-dvh bg-background font-sans text-text-main antialiased">
+      <div className="flex flex-col w-full max-w-[500px] bg-white min-h-dvh relative shadow-premium border-x border-slate-50">
         <header className="sticky top-0 z-50 flex items-center justify-between h-[64px] px-6 bg-white bg-opacity-80 backdrop-blur-xl">
           <div className="flex items-center">
             <h1 className="text-[22px] font-black text-text-main tracking-tight flex items-center gap-2">
@@ -38,7 +42,7 @@ export default function Layout({ children, activeTab, onTabChange }: LayoutProps
           </div>
         </main>
 
-        <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
+        <BottomNav activeTab={activeTab} onTabChange={onTabChange} onOpenCalculator={onOpenCalculator} />
       </div>
     </div>
   );

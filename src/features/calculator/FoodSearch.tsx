@@ -76,9 +76,9 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-t-[48px] overflow-hidden shadow-[0_-20px_50px_rgba(0,0,0,0.03)] border-t border-slate-50">
-      {/* 검색 및 AI 버튼 섹션 */}
-      <div className="p-6 pb-4 space-y-4">
+    <>
+      {/* 검색 및 AI 버튼 섹션 - 상단 라운드 디자인 적용 */}
+      <div className="p-6 pb-4 space-y-4 bg-white rounded-t-[48px] shadow-[0_-20px_50px_rgba(0,0,0,0.03)] border-t border-slate-50 relative z-10">
         {/* AI 분석 버튼 (Premium Placeholder) */}
         <button className="w-full bg-gradient-to-r from-brand-50 via-soft-blue to-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm">
           <div className="flex items-center gap-3">
@@ -116,8 +116,8 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
         </div>
       </div>
 
-      {/* 카테고리 필터 */}
-      <div className="flex overflow-x-auto px-6 pb-4 gap-2.5 no-scrollbar">
+      {/* 카테고리 필터 - Sticky 적용 */}
+      <div className="sticky top-0 z-40 flex overflow-x-auto -mx-6 px-6 py-4 gap-2.5 no-scrollbar bg-white shadow-sm border-b border-slate-50">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
@@ -135,7 +135,7 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-8">
+      <div className="px-6 pb-8">
         {/* 오늘의 레시피 조합 (선택된 음식) */}
         {selectedFoods.length > 0 && (
           <div className="mb-8 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -237,6 +237,6 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };

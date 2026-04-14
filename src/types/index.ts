@@ -31,6 +31,11 @@ export interface LogEntry {
   }[];
   isEaten: boolean;
   memo: string;
+  author?: {
+    uid: string;
+    displayName: string;
+    photoURL?: string;
+  };
 }
 
 /**

@@ -45,9 +45,8 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ stories, initialIndex,
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center animate-in fade-in duration-300">
-      <div className="relative w-full max-w-[500px] h-full bg-white overflow-hidden shadow-2xl flex flex-col">
-        {/* Top Header & Indicator */}
+    <div className="fixed top-0 bottom-0 left-0 right-0 mx-auto w-full max-w-[500px] z-[9999] bg-white flex flex-col animate-in fade-in duration-500 overflow-hidden shadow-2xl border-x border-slate-50">
+      {/* Top Header & Indicator */}
         <div className="absolute top-0 left-0 right-0 h-[100px] px-6 flex items-center justify-between z-[110] bg-white border-b border-slate-50">
           <div className="flex items-center gap-3">
             <div className={twMerge("w-10 h-10 rounded-2xl flex items-center justify-center text-[20px]", currentStory.color)}>
@@ -152,6 +151,5 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({ stories, initialIndex,
           </button>
         </div>
       </div>
-    </div>
   );
 };
