@@ -28,13 +28,13 @@ function App() {
     totalInsulin: logs.reduce((acc, curr) => acc + (curr.totalInsulin || 0), 0),
     avgBG: logs.length > 0 ? Math.round(logs.reduce((acc, curr) => acc + curr.currentBG, 0) / logs.length) : 0
   };
-  const lastBG = logs.length > 0 ? logs[logs.length-1].currentBG : null;
+  const lastBG = logs.length > 0 ? logs[logs.length - 1].currentBG : null;
 
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
         return (
-          <Dashboard 
+          <Dashboard
             onOpenAIReport={() => setIsAIReportOpen(true)}
             onOpenStory={(index) => setSelectedStoryIndex(index)}
             onOpenFamilyMgmt={() => setIsFamilyMgmtOpen(true)}
@@ -48,7 +48,7 @@ function App() {
         return <Settings />;
       default:
         return (
-          <Dashboard 
+          <Dashboard
             onOpenAIReport={() => setIsAIReportOpen(true)}
             onOpenStory={(index) => setSelectedStoryIndex(index)}
             onOpenFamilyMgmt={() => setIsFamilyMgmtOpen(true)}
@@ -59,8 +59,8 @@ function App() {
 
   return (
     <>
-      <Layout 
-        activeTab={activeTab} 
+      <Layout
+        activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       >
@@ -71,7 +71,7 @@ function App() {
 
       {/* Overlays - 모두 최상위에서 관리 */}
       {isCalculatorOpen && (
-        <Calculator 
+        <Calculator
           onClose={() => setIsCalculatorOpen(false)}
           onTabChange={(tab) => {
             setActiveTab(tab);
@@ -81,24 +81,24 @@ function App() {
       )}
 
       {isAIReportOpen && (
-        <AIReportOverlay 
+        <AIReportOverlay
           stats={stats}
           lastBG={lastBG}
-          onClose={() => setIsAIReportOpen(false)} 
+          onClose={() => setIsAIReportOpen(false)}
         />
       )}
 
       {selectedStoryIndex !== null && (
-        <StoryViewer 
-          stories={insights} 
-          initialIndex={selectedStoryIndex} 
-          onClose={() => setSelectedStoryIndex(null)} 
+        <StoryViewer
+          stories={insights}
+          initialIndex={selectedStoryIndex}
+          onClose={() => setSelectedStoryIndex(null)}
         />
       )}
 
       {isFamilyMgmtOpen && (
-        <FamilyManagementOverlay 
-          onClose={() => setIsFamilyMgmtOpen(false)} 
+        <FamilyManagementOverlay
+          onClose={() => setIsFamilyMgmtOpen(false)}
         />
       )}
     </>

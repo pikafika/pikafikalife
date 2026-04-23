@@ -1,9 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { useUserStore } from '../../store/useUserStore';
 import { exportData, importData } from '../../utils/backup';
-import { Save, Download, Upload, Info, CheckCircle2, AlertCircle, Settings as SettingsIcon } from 'lucide-react';
+import { Save, Download, Upload, Info, CheckCircle2, AlertCircle, Settings as SettingsIcon, Database, Activity, RefreshCcw, Trash2, Clock } from 'lucide-react';
+import { useAuthStore } from '../../store/useAuthStore';
+import { SyncService } from '../../services/syncService';
+import { LogService, ActivityLog } from '../../services/logService';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+import { useEffect } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { isAdmin } from '../../utils/permissions';
 
 export default function Settings() {
+  const { user } = useAuthStore();
   const { settings, updateSettings } = useUserStore();
   const [formData, setFormData] = useState({
     icr: settings.icr,
@@ -15,6 +24,7 @@ export default function Settings() {
     type: null,
     message: '',
   });
+  const [isSeeding, setIsSeeding] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +60,40 @@ export default function Settings() {
       }
       setTimeout(() => setStatus({ type: null, message: '' }), 3000);
     }
+  };
+
+  const handleSeedData = async () => {
+    if (isSeeding) return;
+    setIsSeeding(true);
+    try {
+      setStatus({ type: 'success', message: '데이터 생성 중...' });
+      
+      const user = useAuthStore.getState().user;
+      if (!user) {
+        LogService.addLog({ type: 'error', message: 'no-user', details: '로그인이 필요합니다.' });
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      // familyId 가져오기 시도 (데이터베이스 문서 확인)
+      let familyId;
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        familyId = userDoc.exists() ? userDoc.data().familyId : `fam_${user.uid}`;
+      } catch (e) {
+        // 오프라인이거나 문서가 없을 경우 기본값 사용
+        familyId = `fam_${user.uid}`;
+      }
+
+      await SyncService.seed14DayDummyData(familyId);
+      setStatus({ type: 'success', message: '14일치 더미 데이터가 생성되었습니다!' });
+    } catch (e: any) {
+      console.error(e);
+      // LogService.addLog는 SyncService 내부에서 이미 호출됨(error 전파 시에도)
+      setStatus({ type: 'error', message: `데이터 생성 실패: ${e.message}` });
+    } finally {
+      setIsSeeding(false);
+    }
+    setTimeout(() => setStatus({ type: null, message: '' }), 5000);
   };
 
   return (
@@ -211,6 +255,31 @@ export default function Settings() {
           accept=".json"
         />
       </section>
+
+      {/* 실험실 / 개발자 도구 섹션 */}
+      {isAdmin(user) && (
+        <section className="bg-rose-50/50 p-6 rounded-3xl border border-rose-100 space-y-4">
+          <h2 className="text-[18px] font-black text-rose-900 flex items-center">
+            <Database className="w-5 h-5 mr-2" />
+            실험실 기능 (테스트용) 🧪
+          </h2>
+          <p className="text-xs text-rose-700 font-medium leading-relaxed">
+            혈당 변화 추이를 즉시 확인하기 위해 최근 14일간의 가상 데이터를 생성합니다. 
+            실제 데이터와 섞일 수 있으니 주의해 주세요.
+          </p>
+          <button
+            onClick={handleSeedData}
+            disabled={isSeeding}
+            className={twMerge(
+              "w-full bg-white text-rose-600 border-2 border-rose-200 py-[14px] rounded-2xl font-bold active:scale-95 transition-all flex items-center justify-center space-x-2 shadow-sm",
+              isSeeding && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {isSeeding ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+            <span>{isSeeding ? '데이터 생성 중...' : '14일치 더미 데이터 생성하기'}</span>
+          </button>
+        </section>
+      )}
     </div>
   );
 }

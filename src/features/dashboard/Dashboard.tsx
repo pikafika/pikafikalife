@@ -19,6 +19,8 @@ import {
 import { twMerge } from 'tailwind-merge';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCloudSync } from '../../hooks/useCloudSync';
+import { SeedingCard } from '../../components/SeedingCard';
+import { isAdmin } from '../../utils/permissions';
 
 interface DashboardProps {
   onOpenAIReport: () => void;
@@ -328,6 +330,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenAIReport, onOpenStory, onOp
         </div>
         <TrendChart />
       </section>
+
+      {/* 테스트용 데이터 생성 카드 (관리자 권한) */}
+      {isAdmin(user) && <SeedingCard />}
 
       {/* Insight Hub (See All Overlay) */}
       {isSeeAllOpen && (

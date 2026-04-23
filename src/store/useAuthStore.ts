@@ -6,6 +6,10 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
+import { useHistoryStore } from './useHistoryStore';
+import { useAIStore } from './useAIStore';
+import { useCustomFoodStore } from './useCustomFoodStore';
+import { useUserStore } from './useUserStore';
 
 interface AuthState {
   user: User | null;
@@ -16,13 +20,29 @@ interface AuthState {
 }
 
 /**
+ * 모든 스토어의 상태를 초기화하는 유틸리티 함수
+ */
+const clearAllStores = () => {
+  useHistoryStore.getState().clearLogs();
+  useAIStore.getState().resetAIState();
+  useCustomFoodStore.getState().clearCustomFoods();
+  useUserStore.getState().resetSettings();
+};
+
+/**
  * 구글 로그인 및 사용자 인증 상태를 관리하는 스토어
  */
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: true,
 
-  setUser: (user) => set({ user, loading: false }),
+  setUser: (user) => {
+    set({ user, loading: false });
+    // 사용자가 로그아웃 상태(null)가 되면 모든 스토어 초기화
+    if (!user) {
+      clearAllStores();
+    }
+  },
 
   login: async () => {
     try {
@@ -37,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await signOut(auth);
       set({ user: null });
+      clearAllStores(); // 로그아웃 시 명시적으로 한 번 더 호출
     } catch (error) {
       console.error('Logout Error:', error);
     }

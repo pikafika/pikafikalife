@@ -12,6 +12,7 @@ interface AIState {
   addCoachingHistory: (coaching: string) => void;
   setGenerating: (status: boolean) => void;
   updateRefreshTime: () => void;
+  resetAIState: () => void;
 }
 
 /**
@@ -32,6 +33,12 @@ export const useAIStore = create<AIState>()(
         })),
       setGenerating: (status) => set({ isGenerating: status }),
       updateRefreshTime: () => set({ lastUpdate: Date.now() }),
+      resetAIState: () => set({ 
+        insights: [], 
+        coachingHistory: [], 
+        lastUpdate: 0, 
+        isGenerating: false 
+      }),
     }),
     {
       name: 'pika-ai-storage-v2', // 데이터 구조 변경으로 인한 초기화 (icon 직렬화 문제 해결)

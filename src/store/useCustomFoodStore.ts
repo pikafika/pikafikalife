@@ -7,6 +7,7 @@ interface CustomFoodStore {
   addCustomFood: (food: Omit<Food, 'id' | 'isCustom'>) => void;
   updateCustomFood: (id: string, updates: Partial<Omit<Food, 'id' | 'isCustom'>>) => void;
   removeCustomFood: (id: string) => void;
+  clearCustomFoods: () => void;
 }
 
 export const useCustomFoodStore = create<CustomFoodStore>()(
@@ -30,6 +31,7 @@ export const useCustomFoodStore = create<CustomFoodStore>()(
         set((state) => ({
           customFoods: state.customFoods.filter((f) => f.id !== id),
         })),
+      clearCustomFoods: () => set({ customFoods: [] }),
     }),
     { name: 'custom-food-store' }
   )

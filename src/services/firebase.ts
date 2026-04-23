@@ -1,6 +1,11 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { 
+  getFirestore,
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from "firebase/firestore";
 
 // Firebase 설정값 (Vite 환경변수 활용)
 const firebaseConfig = {
@@ -21,9 +26,22 @@ let googleProvider: any;
 
 if (isFirebaseConfigured) {
   try {
-    const app = initializeApp(firebaseConfig);
+    // 이미 초기화된 앱이 있으면 재사용, 없으면 새로 생성
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
+    
+    // Firestore 싱글톤 처리: 이미 초기화되었으면 getFirestore 사용
+    try {
+      db = getFirestore(app);
+    } catch (e) {
+      // 초기화 전이면 전역 설정과 함께 초기화
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    }
+    
     googleProvider = new GoogleAuthProvider();
   } catch (error) {
     console.error("Firebase 초기화 중 에러 발생:", error);

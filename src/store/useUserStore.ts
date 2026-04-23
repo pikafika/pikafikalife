@@ -5,6 +5,7 @@ import { UserSettings } from '../types';
 interface UserState {
   settings: UserSettings;
   updateSettings: (newSettings: Partial<UserSettings>) => void;
+  resetSettings: () => void;
 }
 
 /**
@@ -24,6 +25,15 @@ export const useUserStore = create<UserState>()(
         set((state) => ({
           settings: { ...state.settings, ...newSettings },
         })),
+      resetSettings: () => set({
+        settings: {
+          icr: 10,
+          isf: 50,
+          targetBG: 120,
+          dia: 4,
+          warningThreshold: 10,
+        }
+      }),
     }),
     {
       name: 'user-settings-storage', // localStorage 저장 시 사용할 키 이름
