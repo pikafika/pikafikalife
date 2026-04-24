@@ -73,96 +73,85 @@ export const AIReportOverlay: React.FC<AIReportOverlayProps> = ({ onClose, stats
   }, []);
 
   return (
-    <div className="fixed top-0 bottom-0 left-0 right-0 mx-auto w-full max-w-[500px] z-[9999] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden shadow-2xl border-x border-slate-50">
-      {/* Premium Header */}
-      <header className="p-6 flex items-center justify-between border-b border-slate-50 bg-white/80 backdrop-blur-md sticky top-0 z-20">
+    <div className="fixed top-0 bottom-0 left-0 right-0 mx-auto w-full max-w-[500px] z-[9999] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden shadow-2xl border-x border-gray-100">
+      {/* Header */}
+      <header className="p-6 pt-10 flex items-center justify-between border-b border-gray-100 bg-white sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-            <HugeiconsIcon icon={AiChat01Icon} size={20} color="white" strokeWidth={2.5} />
+          <div className="w-10 h-10 rounded-md bg-brand-500 flex items-center justify-center">
+            <HugeiconsIcon icon={AiChat01Icon} size={18} color="white" strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-[18px] font-black text-text-main">AI 정밀 분석 리포트</h3>
-            <span className="text-[11px] font-bold text-brand-500 bg-brand-50 px-2 py-0.5 rounded-md uppercase">Live Analytics</span>
+            <h3 className="text-[18px] font-bold text-text-main">AI 분석 리포트</h3>
+            <span className="text-[10px] font-bold text-brand-500 border border-brand-100 px-2 py-0.5 rounded-sm uppercase tracking-wider">Live Analysis</span>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 bg-slate-50 rounded-2xl active:scale-90 transition-all">
-          <HugeiconsIcon icon={Cancel01Icon} size={24} strokeWidth={2.5} />
+        <button onClick={onClose} className="p-2 border border-gray-100 rounded-md active:bg-gray-50 transition-all">
+          <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
         </button>
       </header>
 
       <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8 pb-32">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-500 rounded-full animate-spin"></div>
-            <p className="text-[15px] font-black text-text-sub">최근 7일간의 기록을 분석하고 있어요...</p>
-            <p className="text-[12px] font-bold text-text-muted">당신에게 딱 맞는 맞춤 코칭을 준비 중입니다.</p>
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="w-10 h-10 border-3 border-gray-100 border-t-brand-500 rounded-full animate-spin"></div>
+            <p className="text-[14px] font-bold text-text-sub">데이터를 정밀하게 분석 중입니다...</p>
           </div>
         ) : (
           <>
             {/* AI Generated Content */}
-            <section className="bg-gradient-to-br from-slate-900 to-brand-900 rounded-[40px] p-8 text-left relative overflow-hidden shadow-premium">
+            <section className="bg-gray-900 rounded-lg p-8 text-left relative overflow-hidden shadow-lds">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10"></div>
               <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-2">
-                    <HugeiconsIcon icon={ZapIcon} size={18} className="text-brand-400" strokeWidth={3} />
-                    <p className="text-brand-200 text-[14px] font-bold">AI 맞춤 종합 분석</p>
+                    <HugeiconsIcon icon={ZapIcon} size={16} className="text-brand-500" strokeWidth={3} />
+                    <p className="text-brand-300 text-[13px] font-bold uppercase tracking-wider">LDS AI Insight</p>
                   </div>
                   {/* 데이터 기간 안내 가이드 */}
                   {logs.length > 0 && (Date.now() - logs[logs.length - 1].timestamp < 7 * 24 * 60 * 60 * 1000) && (
-                    <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-white/10">
-                      <HugeiconsIcon icon={InformationCircleIcon} size={12} className="text-brand-300" />
-                      <span className="text-[10px] font-bold text-brand-200">정밀 분석까지 D-{Math.max(1, 7 - Math.floor((Date.now() - logs[logs.length-1].timestamp) / (24*60*60*1000)))}일</span>
+                    <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-sm border border-white/10">
+                      <HugeiconsIcon icon={InformationCircleIcon} size={10} className="text-brand-400" />
+                      <span className="text-[10px] font-bold text-brand-300 tracking-tight">분석 완성까지 D-{Math.max(1, 7 - Math.floor((Date.now() - logs[logs.length-1].timestamp) / (24*60*60*1000)))}</span>
                     </div>
                   )}
                 </div>
 
-                {/* 7일 미만일 경우 가이드 문구 노출 */}
-                {logs.length > 0 && (Date.now() - logs[logs.length - 1].timestamp < 7 * 24 * 60 * 60 * 1000) && (
-                  <div className="mb-4 p-3 bg-brand-500/20 border border-brand-500/30 rounded-2xl flex items-start gap-2">
-                    <HugeiconsIcon icon={InformationCircleIcon} size={14} className="text-brand-300 shrink-0 mt-0.5" />
-                    <p className="text-[11px] font-bold text-brand-100 leading-tight">
-                      정밀한 종합 분석 리포트를 위해 최소 7일 이상의 데이터가 권장됩니다. 현재는 보유한 데이터를 기반으로 분석해 드리고 있어요!
-                    </p>
-                  </div>
-                )}
-
-                <div className="text-white text-[15px] font-bold leading-relaxed whitespace-pre-wrap">
+                <div className="text-white text-[14px] font-medium leading-relaxed whitespace-pre-wrap">
                   {report}
                 </div>
               </div>
             </section>
 
-            {/* 기본 통계 (참고용) */}
-            <section className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 rounded-3xl p-5 border border-slate-100">
-                <span className="text-slate-500 text-[11px] block font-black uppercase mb-1">최근 평균 혈당</span>
-                <span className="text-text-main text-[20px] font-black">{stats.avgBG} <span className="text-[12px]">mg/dL</span></span>
+            {/* 기본 통계 */}
+            <section className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-md p-5 border border-gray-100">
+                <span className="text-gray-400 text-[10px] block font-bold uppercase mb-1 tracking-wider">주간 평균 혈당</span>
+                <span className="text-text-main text-[20px] font-bold">{stats.avgBG} <span className="text-[12px] font-medium">mg/dL</span></span>
               </div>
-              <div className="bg-slate-50 rounded-3xl p-5 border border-slate-100">
-                <span className="text-slate-500 text-[11px] block font-black uppercase mb-1">분석 대상 로그</span>
-                <span className="text-text-main text-[20px] font-black">{logs.filter(l => l.timestamp >= Date.now() - 7 * 24 * 60 * 60 * 1000).length} <span className="text-[12px]">개</span></span>
+              <div className="bg-gray-50 rounded-md p-5 border border-gray-100">
+                <span className="text-gray-400 text-[10px] block font-bold uppercase mb-1 tracking-wider">분석 로그 수</span>
+                <span className="text-text-main text-[20px] font-bold">{logs.filter(l => l.timestamp >= Date.now() - 7 * 24 * 60 * 60 * 1000).length} <span className="text-[12px] font-medium">건</span></span>
               </div>
             </section>
 
-            <div className="flex gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-              <HugeiconsIcon icon={InformationCircleIcon} size={16} className="text-slate-400 shrink-0" />
-              <p className="text-[11px] font-bold text-slate-400 leading-tight">
-                본 리포트는 인공지능 분석 결과로, 의료적 판단의 참고 자료로만 활용하시기 바랍니다. 
-                중요한 변경 사항은 전문가와 상담하세요.
+            <div className="flex gap-2 p-5 bg-gray-50 rounded-md border border-gray-100">
+              <HugeiconsIcon icon={InformationCircleIcon} size={14} className="text-gray-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] font-medium text-gray-500 leading-relaxed">
+                본 리포트는 의료적 판단의 참고 자료이며, 전문가 상담을 대체할 수 없습니다. 
+                치료 계획 변경 시 반드시 전문의와 상의하십시오.
               </p>
             </div>
           </>
         )}
       </div>
 
-      {/* Close Button Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-50 z-30">
+      {/* Button Footer */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 z-30">
         <button 
           onClick={onClose}
-          className="w-full bg-brand-500 text-white py-5 rounded-3xl font-black text-[16px] shadow-lg shadow-brand-500/30 active:scale-95 transition-all"
+          className="lds-button-primary w-full py-4.5 text-[15px]"
         >
-          리포트 확인 완료
+          확인 완료
         </button>
       </div>
     </div>

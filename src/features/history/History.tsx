@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { FOOD_DB } from '../../data/food_db';
-import { Trash2, Edit3, ChevronDown, ChevronUp, Calendar, Clock, Droplets, Utensils, Info } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { 
+  Calendar01Icon, 
+  Clock01Icon, 
+  DropletIcon, 
+  Calculator01Icon, 
+  InformationCircleIcon, 
+  Delete02Icon, 
+  ArrowDown01Icon, 
+  ArrowUp01Icon,
+  StickyNote01Icon
+} from '@hugeicons/core-free-icons';
 import { LogEntry } from '../../types';
+import { twMerge } from 'tailwind-merge';
 
 export default function History() {
   const { logs, removeLog, updateLog } = useHistoryStore();
@@ -44,100 +56,106 @@ export default function History() {
 
   if (logs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
-          <Calendar className="w-10 h-10 text-slate-300" />
+      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
+          <HugeiconsIcon icon={Calendar01Icon} size={28} className="text-gray-300" />
         </div>
-        <p className="text-slate-400 font-bold">아직 기록된 내용이 없습니다.</p>
+        <p className="text-gray-400 text-[14px] font-medium tracking-tight">아직 기록된 내용이 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="flex flex-col space-y-8 pb-32 pt-2">
       {Object.entries(groupedLogs).map(([date, dateLogs]) => (
-        <div key={date} className="space-y-3">
-          <div className="flex items-center space-x-2 px-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-black text-slate-500">{date}</h3>
+        <div key={date} className="space-y-4">
+          <div className="flex items-center gap-2 px-3">
+            <h3 className="text-[13px] font-bold text-text-muted">{date}</h3>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-3 px-2">
             {dateLogs.map((log) => (
               <div 
                 key={log.id} 
-                className={`bg-white rounded-3xl p-1 mb-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all overflow-hidden ${
-                  expandedId === log.id ? 'ring-2 ring-[#3182F6]/20' : ''
-                }`}
+                className={twMerge(
+                  "bg-white rounded-lg border border-gray-100 transition-all overflow-hidden",
+                  expandedId === log.id ? "shadow-lds border-brand-200" : "shadow-sm"
+                )}
               >
                 {/* 요약 헤더 */}
                 <div 
-                  className="p-4 flex items-center justify-between cursor-pointer active:bg-[#FAFAFB]"
+                  className={twMerge(
+                    "p-5 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors",
+                    expandedId === log.id && "bg-gray-50/50"
+                  )}
                   onClick={() => toggleExpand(log.id)}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-center">
-                      <span className="text-[10px] font-black text-slate-400 block uppercase">시간</span>
-                      <span className="text-sm font-bold text-slate-700">
+                  <div className="flex items-center gap-5">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">시간</span>
+                      <span className="text-[15px] font-bold text-text-main">
                         {new Date(log.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
                       </span>
                     </div>
                     
-                    <div className="h-8 w-px bg-slate-100" />
+                    <div className="h-8 w-px bg-gray-100" />
                     
-                    <div className="flex space-x-4">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">혈당</span>
-                        <span className={`text-sm font-black ${log.currentBG > 180 ? 'text-rose-500' : log.currentBG < 70 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                          {log.currentBG} <span className="text-[10px] font-bold">mg/dL</span>
+                    <div className="flex gap-6">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">혈당</span>
+                        <span className={twMerge(
+                          "text-[15px] font-bold",
+                          log.currentBG > 180 ? 'text-red-500' : log.currentBG < 70 ? 'text-amber-500' : 'text-brand-500'
+                        )}>
+                          {log.currentBG} <span className="text-[12px] font-medium opacity-70">mg/dL</span>
                         </span>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">인슐린</span>
-                        <span className="text-sm font-black text-primary">
-                          {log.totalInsulin.toFixed(1)} <span className="text-[10px] font-bold">u</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">인슐린</span>
+                        <span className="text-[15px] font-bold text-text-main">
+                          {log.totalInsulin.toFixed(1)} <span className="text-[12px] font-medium opacity-70 text-text-muted">u</span>
                         </span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="text-slate-400">
-                    {expandedId === log.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <div className="text-gray-400">
+                    <HugeiconsIcon icon={expandedId === log.id ? ArrowUp01Icon : ArrowDown01Icon} size={20} />
                   </div>
                 </div>
 
                 {/* 상세 내용 (확장 시) */}
                 {expandedId === log.id && (
-                  <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                    <div className="h-px bg-[#FAFAFB] w-full" />
-                    
+                  <div className="px-5 pb-5 space-y-6 animate-in slide-in-from-top-2 duration-200 border-t border-gray-50 pt-5">
                     {/* 투여 요약 */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-[#FAFAFB] p-3 rounded-2xl">
-                        <div className="flex items-center text-[10px] font-black text-slate-400 mb-1">
-                          <Utensils className="w-3 h-3 mr-1" /> 식사 인슐린
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                        <div className="flex items-center text-[10px] font-bold text-text-sub mb-1.5 gap-1.5">
+                          <HugeiconsIcon icon={Calculator01Icon} size={12} className="text-brand-500" /> 
+                          식사 인슐린
                         </div>
-                        <div className="text-sm font-bold text-slate-700">{log.mealInsulin.toFixed(1)} u</div>
-                        <div className="text-[10px] text-slate-400 font-medium">탄수화물 {log.totalCarbs}g</div>
+                        <div className="text-[16px] font-bold text-text-main leading-none">{log.mealInsulin.toFixed(1)} <span className="text-[12px] font-medium text-text-muted">u</span></div>
+                        <div className="text-[11px] text-text-muted font-medium mt-1.5">탄수화물 {log.totalCarbs}g</div>
                       </div>
-                      <div className="bg-[#FAFAFB] p-3 rounded-2xl">
-                        <div className="flex items-center text-[10px] font-black text-slate-400 mb-1">
-                          <Droplets className="w-3 h-3 mr-1" /> 교정 인슐린
+                      <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                        <div className="flex items-center text-[10px] font-bold text-text-sub mb-1.5 gap-1.5">
+                          <HugeiconsIcon icon={DropletIcon} size={12} className="text-brand-500" /> 
+                          교정 인슐린
                         </div>
-                        <div className="text-sm font-bold text-slate-700">{log.corrInsulin.toFixed(1)} u</div>
-                        <div className="text-[10px] text-slate-400 font-medium">IOB {log.iobAtTime.toFixed(1)} u</div>
+                        <div className="text-[16px] font-bold text-text-main leading-none">{log.corrInsulin.toFixed(1)} <span className="text-[12px] font-medium text-text-muted">u</span></div>
+                        <div className="text-[11px] text-text-muted font-medium mt-1.5">IOB {log.iobAtTime.toFixed(1)} u</div>
                       </div>
                     </div>
 
                     {/* 음식 목록 */}
                     {log.foods.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-[12px] font-bold text-gray-500 flex items-center">
-                          <Utensils className="w-3.5 h-3.5 mr-1" /> 섭취 음식
+                      <div className="space-y-3">
+                        <h4 className="text-[12px] font-bold text-text-sub flex items-center gap-1.5">
+                          <HugeiconsIcon icon={Calculator01Icon} size={14} className="text-gray-400" /> 섭취 음식
                         </h4>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 text-wrap">
                           {log.foods.map((f, idx) => (
-                            <span key={idx} className="px-3 py-1 bg-[#3182F6]/5 text-[#3182F6] text-sm font-bold rounded-full border border-[#3182F6]/10">
+                            <span key={idx} className="px-3 py-1.5 bg-brand-50 text-brand-600 text-[13px] font-bold rounded-sm border border-brand-100">
                               {getFoodName(f.foodId)} {f.amount}
                             </span>
                           ))}
@@ -146,15 +164,15 @@ export default function History() {
                     )}
 
                     {/* 메모 영역 */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-[11px] font-black text-slate-400 flex items-center">
-                          <Info className="w-3 h-3 mr-1" /> 메모
+                        <h4 className="text-[12px] font-bold text-text-sub flex items-center gap-1.5">
+                          <HugeiconsIcon icon={StickyNote01Icon} size={14} className="text-gray-400" /> 상세 메모
                         </h4>
                         {editingMemoId !== log.id && (
                           <button 
                             onClick={(e) => { e.stopPropagation(); startEditMemo(log); }}
-                            className="text-[10px] font-bold text-primary hover:underline"
+                            className="text-[11px] font-bold text-brand-500 hover:underline"
                           >
                             수정하기
                           </button>
@@ -162,33 +180,32 @@ export default function History() {
                       </div>
                       
                       {editingMemoId === log.id ? (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <textarea
                             value={tempMemo}
                             onChange={(e) => setTempMemo(e.target.value)}
-                            className="w-full p-3 bg-[#FAFAFB] border-2 border-primary/20 rounded-2xl text-sm focus:outline-none focus:border-primary transition-all font-medium"
-                            rows={2}
+                            className="w-full p-4 bg-gray-50 border border-transparent rounded-sm text-[14px] focus:bg-white focus:border-brand-500 focus:outline-none transition-all font-medium min-h-[80px]"
                             placeholder="메모를 입력하세요..."
                             autoFocus
                           />
-                          <div className="flex justify-end space-x-2">
+                          <div className="flex justify-end gap-2">
                             <button 
                               onClick={() => setEditingMemoId(null)}
-                              className="px-3 py-1.5 text-xs font-bold text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                              className="px-4 py-2 text-[12px] font-bold text-text-muted hover:bg-gray-100 rounded-sm transition-colors"
                             >
                               취소
                             </button>
                             <button 
                               onClick={() => saveMemo(log.id)}
-                              className="px-3 py-1.5 text-xs font-bold text-white bg-primary rounded-lg shadow-sm"
+                              className="px-5 py-2 text-[12px] font-bold text-white bg-brand-500 rounded-sm shadow-sm"
                             >
-                              저장
+                              저장하기
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm font-medium text-slate-600 italic bg-[#FAFAFB]/50 p-3 rounded-2xl border border-slate-50">
-                          {log.memo || '입력된 메모가 없습니다.'}
+                        <p className="text-[14px] font-medium text-text-sub leading-relaxed bg-gray-50 p-4 rounded-sm border border-gray-100 min-h-[50px]">
+                          {log.memo || '입력된 상세 정보가 없습니다.'}
                         </p>
                       )}
                     </div>
@@ -202,9 +219,9 @@ export default function History() {
                             removeLog(log.id);
                           }
                         }}
-                        className="flex items-center space-x-1 text-xs font-bold text-rose-400 hover:text-rose-600 transition-colors"
+                        className="flex items-center gap-1.5 text-[11px] font-bold text-red-400 hover:text-red-600 transition-all"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <HugeiconsIcon icon={Delete02Icon} size={14} />
                         <span>기록 삭제</span>
                       </button>
                     </div>

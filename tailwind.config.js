@@ -5,16 +5,28 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: "#F0F7FF",
-          100: "#E0EFFF",
-          200: "#BADAFF",
-          300: "#7EB6FF",
-          400: "#4E91FF",
-          500: "#3182F6", // Primary
-          600: "#2563EB",
-          700: "#1D4ED8",
-          800: "#1E40AF",
-          900: "#1E3A8A",
+          50: "#E6F9EE",
+          100: "#CEF3DE",
+          200: "#9DE7BD",
+          300: "#6CDB9C",
+          400: "#3BCF7B",
+          500: "#06C755", // LDS Primary Green
+          600: "#05B34C",
+          700: "#049F43",
+          800: "#038B3B",
+          900: "#027732",
+        },
+        gray: {
+          50: "#F8F8F8",
+          100: "#F0F0F0",
+          200: "#E5E5E5",
+          300: "#D1D1D1",
+          400: "#A1A1A1",
+          500: "#6B6B6B",
+          600: "#424242",
+          700: "#262626",
+          800: "#1A1A1A",
+          900: "#111111",
         },
         warm: {
           50: "#FFF9F5",
@@ -24,26 +36,23 @@ export default {
           400: "#FB8852",
           500: "#F97316",
         },
-        soft: {
-          blue: "#F5F9FF",
-          pink: "#FFF5F8",
-          green: "#F5FFF9",
-          yellow: "#FFFDF5",
-          purple: "#F9F5FF",
-        },
-        background: "#FAFAFB",
+        background: "#FFFFFF",
         surface: "#FFFFFF",
-        "text-main": "#1A1D23",
-        "text-sub": "#6B7280",
-        "text-muted": "#9CA3AF",
+        "text-main": "#111111", // LDS Black
+        "text-sub": "#6B6B6B",
+        "text-muted": "#A1A1A1",
       },
       borderRadius: {
-        '4xl': '2rem',
-        '5xl': '2.5rem',
+        'sm': '4px',    // LDS Small (Buttons, Inputs)
+        'md': '8px',    // LDS Medium
+        'lg': '12px',   // LDS Large (Cards)
+        'xl': '16px',
+        '2xl': '24px',
+        'full': '9999px',
       },
       boxShadow: {
-        'soft': '0 8px 30px rgba(0, 0, 0, 0.04)',
-        'premium': '0 20px 50px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.02)',
+        'lds': '0 4px 12px rgba(0, 0, 0, 0.05)',
+        'sm': '0 2px 4px rgba(0, 0, 0, 0.02)',
       },
       fontFamily: {
         sans: ["SUIT", "Pretendard", "sans-serif"],

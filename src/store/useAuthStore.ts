@@ -47,8 +47,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login Error:', error);
+      
+      // 사용자에게 더 친절한 피드백 제공
+      if (error.code === 'auth/requests-from-referer-are-blocked') {
+        alert('현재 도메인(localhost 등)이 Firebase 콘솔의 "승인된 도메인"에 등록되지 않았습니다. Firebase 콘솔 > Authentication > Settings에서 도메인을 추가해 주세요.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        // 사용자가 창을 닫은 경우는 별도 처리 불필요
+      } else {
+        alert(`로그인 중 오류가 발생했습니다: ${error.message}`);
+      }
+      
       throw error;
     }
   },

@@ -77,84 +77,84 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
   };
 
   return (
-    <div className="fixed top-0 bottom-0 left-0 right-0 mx-auto w-full max-w-[500px] z-[9999] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden shadow-2xl border-x border-slate-50">
-      <header className="p-6 flex items-center justify-between border-b border-slate-50">
+    <div className="fixed top-0 bottom-0 left-0 right-0 mx-auto w-full max-w-[500px] z-[9999] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden shadow-2xl border-x border-gray-100">
+      <header className="p-6 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-brand-500 flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-md bg-brand-500 flex items-center justify-center text-white">
             <HugeiconsIcon icon={UserGroupIcon} size={20} strokeWidth={2.5} />
           </div>
-          <h3 className="text-[18px] font-black text-text-main">가족 연결 관리</h3>
+          <h3 className="text-[18px] font-bold text-text-main">가족 연결 관리</h3>
         </div>
-        <button onClick={onClose} className="p-2 bg-slate-50 rounded-2xl">
-          <HugeiconsIcon icon={Cancel01Icon} size={24} strokeWidth={2.5} />
+        <button onClick={onClose} className="p-2 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors">
+          <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
         </button>
       </header>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* 내 가족 코드 섹션 */}
-        <section className="bg-slate-50 rounded-[40px] p-8 text-center border border-slate-100">
-          <h4 className="text-[15px] font-black text-text-main mb-2">나의 가족 참여 코드</h4>
-          <p className="text-[12px] font-bold text-text-muted mb-6">다른 가족에게 이 코드를 공유하여 <br /> 실시간으로 기록을 함께 보세요.</p>
+        <section className="bg-gray-50 rounded-lg p-8 text-center border border-gray-100">
+          <h4 className="text-[15px] font-bold text-text-main mb-2">나의 가족 참여 코드</h4>
+          <p className="text-[12px] font-medium text-text-muted mb-8 leading-relaxed">다른 가족에게 이 코드를 공유하여 <br /> 실시간으로 기록을 함께 보세요.</p>
           
-          <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-brand-200 relative group min-h-[100px] flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8 border border-gray-100 shadow-sm relative group min-h-[120px] flex items-center justify-center">
             {loading ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-6 h-6 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-6 h-6 border-3 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-[12px] font-bold text-brand-300">연결 확인 중...</span>
               </div>
             ) : (
-              <span className="text-[32px] font-black text-brand-500 tracking-widest">
-                {familyData?.inviteCode || 'GENERATING'}
+              <span className="text-[36px] font-bold text-text-main tracking-[0.2em] leading-none">
+                {familyData?.inviteCode || '...'}
               </span>
             )}
             {!loading && (
               <button 
                 onClick={handleCopyCode}
-                className="absolute -right-3 -bottom-3 w-12 h-12 bg-brand-500 rounded-2xl shadow-lg flex items-center justify-center text-white active:scale-90 transition-all"
+                className="absolute -right-3 -bottom-3 w-12 h-12 bg-white border border-gray-200 rounded-lg shadow-md flex items-center justify-center text-brand-500 active:scale-90 transition-all hover:border-brand-200"
               >
                 <HugeiconsIcon icon={isCopied ? CheckmarkBadge01Icon : Copy01Icon} size={20} strokeWidth={2.5} />
               </button>
             )}
           </div>
-          {isCopied && <p className="text-brand-500 text-[11px] font-bold mt-4 animate-bounce">코드가 복사되었습니다!</p>}
+          {isCopied && <p className="text-brand-500 text-[11px] font-bold mt-6 animate-pulse">코드가 클립보드에 복사되었습니다!</p>}
         </section>
 
         {/* 코드 입력하여 참여하기 */}
         <section className="space-y-4">
-          <h4 className="text-[16px] font-black text-text-main flex items-center gap-2">
-            <HugeiconsIcon icon={Link01Icon} size={18} className="text-brand-500" />
+          <h4 className="text-[15px] font-bold text-text-main flex items-center gap-2">
+            <HugeiconsIcon icon={Link01Icon} size={18} className="text-brand-500" strokeWidth={2.5} />
             초대 코드로 가족 참여하기
           </h4>
           <div className="flex gap-2">
             <input 
               type="text" 
-              placeholder="6자리 코드를 입력하세요"
+              placeholder="6자리 코드 입력"
               value={inviteCodeInput}
               onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
-              className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-text-main placeholder:text-slate-300 focus:border-brand-500 outline-none transition-all uppercase tracking-widest"
+              className="flex-1 bg-gray-50 border border-gray-100 rounded-sm px-5 py-4 font-bold text-text-main placeholder:text-gray-300 focus:border-brand-500 focus:bg-white outline-none transition-all uppercase tracking-widest text-[16px]"
               maxLength={6}
             />
-            <button className="bg-slate-900 text-white px-6 rounded-2xl font-black text-[14px] active:scale-95 transition-all">
-              참여
+            <button className="bg-gray-900 text-white px-8 rounded-sm font-bold text-[14px] active:scale-95 transition-all shadow-sm">
+              연결하기
             </button>
           </div>
         </section>
 
         {/* 도움말 */}
-        <div className="bg-soft-blue/30 rounded-3xl p-5 flex gap-3 border border-brand-100/50">
+        <div className="bg-brand-50/50 rounded-lg p-5 flex gap-3 border border-brand-100">
           <HugeiconsIcon icon={HelpCircleIcon} size={18} className="text-brand-500 shrink-0 mt-0.5" />
-          <p className="text-[12px] font-bold text-brand-600 leading-tight">
-            참여 코드를 통해 가족으로 연결되면 모든 혈당 및 식단 기록이 실시간으로 공유됩니다. 언제든 관리 페이지에서 연결을 해제할 수 있습니다.
+          <p className="text-[12px] font-medium text-brand-700 leading-relaxed">
+            참여 코드를 통해 가족으로 연결되면 모든 혈당 및 식단 기록이 실시간으로 공유됩니다. 개인 정보 보호를 위해 신중하게 공유해 주세요.
           </p>
         </div>
       </div>
 
-      <div className="p-6 border-t border-slate-50">
+      <div className="p-6 pt-0">
         <button 
           onClick={onClose}
-          className="w-full bg-brand-500 text-white py-5 rounded-3xl font-black text-[16px] shadow-lg shadow-brand-500/30"
+          className="w-full lds-button-primary"
         >
-          설정 완료
+          확인
         </button>
       </div>
     </div>

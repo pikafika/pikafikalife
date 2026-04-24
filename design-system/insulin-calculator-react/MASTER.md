@@ -1,4 +1,4 @@
-# Design System Master File
+# Design System Master File (LDS Edition)
 
 > **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
 > If that file exists, its rules **override** this Master file.
@@ -6,146 +6,116 @@
 
 ---
 
-**Project:** Insulin Calculator React
-**Generated:** 2026-04-06 17:03:40
-**Category:** Healthcare App
+**Project:** PikafikaLife
+**Generated:** 2026-04-24 15:22:15
+**Design System:** LINE Design System (LDS)
+**Category:** Healthcare Companion
 
 ---
 
 ## Global Rules
 
-### Color Palette
+### Color Palette (LDS Brand)
 
-| Role | Hex | CSS Variable |
+| Role | Hex | Tailwind Class |
 |------|-----|--------------|
-| Primary | `#0891B2` | `--color-primary` |
-| Secondary | `#22D3EE` | `--color-secondary` |
-| CTA/Accent | `#059669` | `--color-cta` |
-| Background | `#ECFEFF` | `--color-background` |
-| Text | `#164E63` | `--color-text` |
+| Brand Green | `#06C755` | `bg-brand-500` / `text-brand-500` |
+| Brand Light | `#CEF3DE` | `bg-brand-100` |
+| Brand Deep | `#05B34C` | `text-brand-600` |
+| Bg Main | `#F8F9FA` | `bg-bg-main` |
+| Text Main | `#111111` | `text-text-main` |
+| Text Sub | `#666666` | `text-text-sub` |
+| Text Muted | `#A1A1A1` | `text-text-muted` |
 
-**Color Notes:** Calm cyan + health green
+**Color Notes:** LINE Green is the primary anchor. Use pure white backgrounds for cards and off-white for the main page background.
 
-### Typography
+### Typography (LDS Style)
 
-- **Heading Font:** Figtree
-- **Body Font:** Noto Sans
-- **Mood:** medical, clean, accessible, professional, healthcare, trustworthy
-- **Google Fonts:** [Figtree + Noto Sans](https://fonts.google.com/share?selection.family=Figtree:wght@300;400;500;600;700|Noto+Sans:wght@300;400;500;700)
+- **Main Font:** Pretendard, Inter, or Noto Sans KR
+- **Headings:** Bold (700), Tracking -1% to -2%
+- **Body:** Regular (400) or Medium (500)
+- **Mood:** Minimal, Clean, Trustworthy, Modern, Sophisticated
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
-```
+**Typography Sizes:**
+| Name | Size | Weight |
+|------|------|--------|
+| Display | `24px+` | Bold |
+| Large | `18px` | Bold |
+| Base | `15px` | Medium |
+| Small | `13px` | Medium |
+| Caption | `11px` | Bold |
 
-### Spacing Variables
+### Spacing & Rounding
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
+| `rounded-lg` | `12px` | Standard Cards |
+| `rounded-md` | `8px` | Modals, large UI elements |
+| `rounded-sm` | `4px` | Buttons, Inputs, Tags |
+| `gap-md` | `16px` | Standard spacing |
+| `px-6` | `24px` | Page horizontal padding |
 
-### Shadow Depths
+### Shadow Tokens (LDS Flatness)
 
 | Level | Value | Usage |
 |-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+| `shadow-lds` | `0 4px 12px rgba(0,0,0,0.05)` | Floating cards |
+| `shadow-sm` | `0 2px 4px rgba(0,0,0,0.02)` | Interactive elements |
 
 ---
 
 ## Component Specs
 
-### Buttons
+### Buttons (LDS Minimal)
 
 ```css
-/* Primary Button */
+/* lds-button-primary */
 .btn-primary {
-  background: #059669;
+  background: #06C755;
   color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
+  padding: 14px 20px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 14px;
 }
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Secondary Button */
+/* lds-button-secondary */
 .btn-secondary {
-  background: transparent;
-  color: #0891B2;
-  border: 2px solid #0891B2;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
+  background: white;
+  color: #111111;
+  border: 1px solid #E2E8F0;
+  padding: 14px 20px;
+  border-radius: 4px;
 }
 ```
 
-### Cards
+### Cards (LDS Floating)
 
 ```css
 .card {
-  background: #ECFEFF;
+  background: white;
   border-radius: 12px;
+  border: 1px solid #F1F5F9;
   padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* shadow-lds */
 }
 ```
 
-### Inputs
+### Inputs (LDS Clean)
 
 ```css
 .input {
   padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
+  background: #F8F9FA;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 15px;
 }
 
 .input:focus {
-  border-color: #0891B2;
-  outline: none;
-  box-shadow: 0 0 0 3px #0891B220;
-}
-```
-
-### Modals
-
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.modal {
+  border-color: #06C755;
   background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
+  outline: none;
 }
 ```
 
@@ -153,52 +123,63 @@
 
 ## Style Guidelines
 
-**Style:** Accessible & Ethical
+**Style:** Minimal & Sophisticated
 
-**Keywords:** High contrast, large text (16px+), keyboard navigation, screen reader friendly, WCAG compliant, focus state, semantic
+**Keywords:** Micro-interactions, Clean borders, White-space focus, High-quality icons, No-clutter layout.
 
-**Best For:** Government, healthcare, education, inclusive products, large audience, legal compliance, public
+**Best For:** Everyday health management, Family sharing environments, Premium wellness apps.
 
-**Key Effects:** Clear focus rings (3-4px), ARIA labels, skip links, responsive design, reduced motion, 44x44px touch targets
+### Key Effects:
+- **Hover Transitions:** 300ms ease-out (opacity or color change).
+- **Active States:** Subtle scale down (0.98x) for buttons.
+- **Icons:** Thin-stroke SVG icons (Hugeicons or similar).
 
-### Page Pattern
+---
 
-**Pattern Name:** Minimal Single Column
+## Development Guide (Code Consistency)
 
-- **Conversion Strategy:** Single CTA focus. Large typography. Lots of whitespace. No nav clutter. Mobile-first.
-- **CTA Placement:** Center, large CTA button
-- **Section Order:** 1. Hero headline, 2. Short description, 3. Benefit bullets (3 max), 4. CTA, 5. Footer
+To maintain LDS integrity during development, always prioritize the following resources:
+
+### 1. Tailwind Design Tokens
+Avoid using absolute values (e.g., `rounded-[20px]`). Instead, use our standardized tokens:
+
+| Token | CSS Value | Usage |
+|-------|-----------|-------|
+| `rounded-sm` | `4px` | Buttons, Input fields, Small tags |
+| `rounded-md` | `8px` | Modal headers, inner containers |
+| `rounded-lg` | `12px` | **Primary Cards** (Standard LDS Card) |
+| `shadow-lds` | `0 4px 12px rgba(0,0,0,0.05)` | Floating card effects |
+| `bg-brand-500` | `#06C755` | Brand primary color (LINE Green) |
+
+### 2. Standard UI Components
+We provide atomic components in `src/components/ui/` that encapsulate LDS logic. **Use these whenever possible.**
+
+- **`Button`**: `variant="primary" | "secondary" | "outline" | "ghost"`
+- **`Card`**: `padding="none" | "sm" | "md" | "lg"`
+- **`Input`**: Includes standard LDS focus states, labels, and error handling.
+
+### 3. AI Assistant Instructions
+When asking an AI (like Antigravity) to build new features, include this instruction:
+> "Follow the LINE Design System (LDS) rules defined in `design-system/insulin-calculator-react/MASTER.md`. Use the standard UI components in `src/components/ui/` and Tailwind tokens for all styling."
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Bright neon colors
-- ❌ Motion-heavy animations
-- ❌ AI purple/pink gradients
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
+- ❌ **Heavy Shadows** — No `shadow-2xl` or dark shadow spreads.
+- ❌ **Aggressive Gradients** — Avoid multi-color linear gradients; use flat colors.
+- ❌ **Excessive Rounding** — Avoid `rounded-full` for everything; use `rounded-lg` or `rounded-sm`.
+- ❌ **Blue Accents** — Blue is forbidden unless for mandatory safe-zones.
+- ❌ **Toss-style 3D effects** — Stay flat and minimal.
 
 ---
 
 ## Pre-Delivery Checklist
 
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+- [ ] All brand colors use `#06C755` (LINE Green).
+- [ ] Border radius for main cards is exactly `12px`.
+- [ ] Buttons use `rounded-sm` (4px).
+- [ ] Typography tracking is set to `-1%`~`-2%` for headings.
+- [ ] Hover and Active states use smooth CSS transitions.
+- [ ] No content layout shift on hover.
+- [ ] Mobile-first screen padding (24px horizontal).

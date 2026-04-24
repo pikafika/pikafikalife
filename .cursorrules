@@ -1,0 +1,30 @@
+# PikafikaLife AI Development Rules (LDS)
+
+You are an expert developer building PikafikaLife. Always follow these rules to maintain the LINE Design System (LDS) consistency.
+
+## 1. Design System Source of Truth
+- Refer to `design-system/insulin-calculator-react/MASTER.md` for all design tokens.
+- Brand Color: `#06C755` (LINE Green).
+
+## 2. Core Styling Rules
+- **Rounding**: Use `rounded-lg` (12px) for main cards, `rounded-sm` (4px) for buttons and inputs.
+- **Shadows**: Use `shadow-lds` for floating cards. No heavy shadows.
+- **Icons**: Use `Hugeicons` exclusively. Stroke width should be consistent (2.0 or 2.5).
+- **Typography**: Use Bold for headings, Medium for body. tracking-tight for titles.
+
+## 3. Atomic Components
+Always prefer components in `src/components/ui/` over manual Tailwind classes:
+- `<Button variant="..." size="...">`
+- `<Card padding="...">`
+- `<Input label="..." error={...}>`
+
+## 4. Anti-Patterns
+- NO blue colors (`text-blue-500`, etc.).
+- NO aggressive gradients.
+- NO excessive rounding (`rounded-3xl`, `rounded-4xl`).
+- NO 3D or heavy glassmorphism effects.
+
+## 5. Implementation Workflow
+1. Check if a UI component exists in `src/components/ui/`.
+2. If not, create one following LDS rules.
+3. Use Tailwind tokens (`brand-500`, `text-main`, `rounded-lg`) for any custom styling.

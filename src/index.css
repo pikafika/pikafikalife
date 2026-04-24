@@ -4,12 +4,12 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased text-text-main bg-background;
+    @apply font-sans antialiased text-text-main bg-background selection:bg-brand-100;
     -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight;
+    @apply tracking-tight font-bold text-text-main;
   }
 }
 
@@ -18,16 +18,33 @@
 }
 
 .app-container {
-  @apply max-w-[500px] mx-auto min-h-dvh bg-background flex flex-col relative;
+  @apply max-w-[500px] mx-auto min-h-dvh bg-background flex flex-col relative border-x border-gray-100;
 }
 
-/* Custom Scrollbar for premium feel */
+/* LDS Style Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-brand-100 rounded-full;
+  @apply bg-gray-200 rounded-full hover:bg-brand-200 transition-colors;
+}
+
+/* LDS Interactive Defaults */
+button:active:not(:disabled) {
+  @apply opacity-70 transform scale-[0.98];
+}
+
+.lds-card {
+  @apply bg-white border border-gray-200 rounded-md shadow-lds;
+}
+
+.lds-button-primary {
+  @apply bg-brand-500 text-white font-bold py-4 px-6 rounded-sm active:bg-brand-600 transition-all text-center;
+}
+
+.lds-button-secondary {
+  @apply bg-white border border-gray-300 text-text-main font-bold py-4 px-6 rounded-sm active:bg-gray-50 transition-all text-center;
 }

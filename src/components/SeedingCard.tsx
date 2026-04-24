@@ -30,32 +30,29 @@ export const SeedingCard: React.FC = () => {
 
   return (
     <section className="px-2 mb-8">
-      <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-4xl p-6 border border-rose-100 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-3 opacity-10">
-          <HugeiconsIcon icon={ZapIcon} size={80} />
-        </div>
+      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 relative overflow-hidden group">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <div className="w-8 h-8 rounded-md bg-brand-500 flex items-center justify-center">
             <HugeiconsIcon icon={ZapIcon} size={16} color="white" strokeWidth={3} />
           </div>
-          <h4 className="font-black text-[15px] text-rose-600">개발자 도구 : 데이터 시딩</h4>
+          <h4 className="font-bold text-[15px] text-white">데이터 시딩 (개발자 전용)</h4>
         </div>
-        <div className="bg-white/60 backdrop-blur-md rounded-3xl p-5 border border-white shadow-soft">
-          <div className="flex flex-col gap-1 mb-4">
-            <span className="text-[15px] leading-relaxed text-text-main font-bold">
-              14일치 더미 데이터를 생성하시겠습니까?
+        <div className="bg-white/5 rounded-sm p-5 border border-white/10">
+          <div className="flex flex-col gap-1 mb-5">
+            <span className="text-[14px] leading-relaxed text-white font-bold">
+              14일치 더미 데이터 생성
             </span>
-            <span className="text-[12px] text-text-sub font-medium">
-              이 작업은 현재 가족 그룹에 테스트용 데이터를 추가합니다.
+            <span className="text-[11px] text-gray-400 font-medium leading-relaxed">
+              테스트를 위한 가상 데이터를 현재 가족 그룹에 추가합니다.
             </span>
           </div>
           <button 
             onClick={handleSeedData}
             disabled={isSeeding}
-            className="flex items-center gap-1.5 text-[12px] font-black text-rose-500 ml-auto bg-white px-4 py-2 rounded-xl shadow-sm border border-rose-100 active:scale-95 transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 text-[13px] font-bold text-white bg-brand-500 hover:bg-brand-600 py-3 rounded-sm transition-all disabled:opacity-50"
           >
-            {isSeeding ? '생성 중...' : '지금 바로 생성하기'}
-            <HugeiconsIcon icon={ArrowRight01Icon} size={14} strokeWidth={3} />
+            {isSeeding ? '데이터 생성 중...' : '지금 바로 생성하기'}
+            <HugeiconsIcon icon={ArrowRight01Icon} size={16} strokeWidth={2.5} />
           </button>
         </div>
       </div>

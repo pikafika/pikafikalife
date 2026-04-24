@@ -1,15 +1,27 @@
-import React, { useState, useRef } from 'react';
-import { useUserStore } from '../../store/useUserStore';
-import { exportData, importData } from '../../utils/backup';
-import { Save, Download, Upload, Info, CheckCircle2, AlertCircle, Settings as SettingsIcon, Database, Activity, RefreshCcw, Trash2, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { 
+  Settings02Icon, 
+  Settings01Icon,
+  DatabaseIcon, 
+  CloudDownloadIcon, 
+  CloudUploadIcon, 
+  InformationCircleIcon, 
+  CheckmarkCircle02Icon, 
+  AlertCircleIcon,
+  FloppyDiskIcon,
+  Refresh01Icon
+} from '@hugeicons/core-free-icons';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useUserStore } from '../../store/useUserStore';
 import { SyncService } from '../../services/syncService';
-import { LogService, ActivityLog } from '../../services/logService';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { LogService } from '../../services/logService';
+import { exportData, importData } from '../../utils/backup';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
-import { useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { isAdmin } from '../../utils/permissions';
+import { SeedingCard } from '../../components/SeedingCard';
 
 export default function Settings() {
   const { user } = useAuthStore();
@@ -24,8 +36,7 @@ export default function Settings() {
     type: null,
     message: '',
   });
-  const [isSeeding, setIsSeeding] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
@@ -45,8 +56,6 @@ export default function Settings() {
     if (file) {
       const success = await importData(file);
       if (success) {
-        // 성공 시 페이지를 새로고침하거나 상태를 동기화합니다.
-        // 스토어 상태가 바뀌었으므로, 현재 폼 데이터도 갱신합니다.
         const newSettings = useUserStore.getState().settings;
         setFormData({
           icr: newSettings.icr,
@@ -56,195 +65,168 @@ export default function Settings() {
         });
         setStatus({ type: 'success', message: '데이터가 성공적으로 복구되었습니다.' });
       } else {
-        setStatus({ type: 'error', message: '데이터 복구에 실패했습니다. 올바른 파일인지 확인해 주세요.' });
+        setStatus({ type: 'error', message: '데이터 복구에 실패했습니다.' });
       }
       setTimeout(() => setStatus({ type: null, message: '' }), 3000);
     }
   };
 
-  const handleSeedData = async () => {
-    if (isSeeding) return;
-    setIsSeeding(true);
-    try {
-      setStatus({ type: 'success', message: '데이터 생성 중...' });
-      
-      const user = useAuthStore.getState().user;
-      if (!user) {
-        LogService.addLog({ type: 'error', message: 'no-user', details: '로그인이 필요합니다.' });
-        throw new Error("로그인이 필요합니다.");
-      }
-
-      // familyId 가져오기 시도 (데이터베이스 문서 확인)
-      let familyId;
-      try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        familyId = userDoc.exists() ? userDoc.data().familyId : `fam_${user.uid}`;
-      } catch (e) {
-        // 오프라인이거나 문서가 없을 경우 기본값 사용
-        familyId = `fam_${user.uid}`;
-      }
-
-      await SyncService.seed14DayDummyData(familyId);
-      setStatus({ type: 'success', message: '14일치 더미 데이터가 생성되었습니다!' });
-    } catch (e: any) {
-      console.error(e);
-      // LogService.addLog는 SyncService 내부에서 이미 호출됨(error 전파 시에도)
-      setStatus({ type: 'error', message: `데이터 생성 실패: ${e.message}` });
-    } finally {
-      setIsSeeding(false);
-    }
-    setTimeout(() => setStatus({ type: null, message: '' }), 5000);
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col space-y-8 pb-32 pt-2">
       {/* 상태 메시지 */}
       {status.type && (
-        <div className={`p-4 rounded-2xl flex items-center space-x-3 animate-in fade-in slide-in-from-top-4 duration-300 ${
-          status.type === 'success' ? 'bg-[#FAFAFB] text-blue-600 border border-blue-100' : 'bg-rose-50 text-rose-700'
-        }`}>
-          {status.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <span className="text-sm font-bold">{status.message}</span>
+        <div className={twMerge(
+          "mx-2 p-4 rounded-md flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 border",
+          status.type === 'success' ? 'bg-brand-50 text-brand-600 border-brand-100' : 'bg-red-50 text-red-600 border-red-100'
+        )}>
+          <HugeiconsIcon icon={status.type === 'success' ? CheckmarkCircle02Icon : AlertCircleIcon} size={20} strokeWidth={2.5} />
+          <span className="text-[13px] font-bold">{status.message}</span>
         </div>
       )}
 
-      {/* 개인 설정 섹션 */}
-      <section className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 space-y-6">
-        <h2 className="text-[20px] font-black text-gray-900 flex items-center">
-          <SettingsIcon className="w-6 h-6 mr-2 text-gray-800" />
-          개인 설정 ⚙️
+      {/* 헤더 섹션 */}
+      <section className="px-2 mb-2">
+        <h2 className="text-[22px] font-bold text-text-main flex items-center gap-2">
+          <HugeiconsIcon icon={Settings02Icon} size={24} className="text-brand-500" strokeWidth={2.5} />
+          환경 설정
         </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* 탄수화물 계수 (ICR) */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-black text-slate-600">
-              탄수화물 계수 (ICR)
-              <div className="group relative ml-1 cursor-help">
-                <Info className="w-4 h-4 text-slate-400" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  인슐린 1단위가 처리하는 탄수화물 양(g)입니다.
-                </div>
-              </div>
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={formData.icr}
-                onChange={(e) => setFormData({ ...formData, icr: Number(e.target.value) })}
-                className="w-full px-4 py-3 bg-[#FAFAFB] border-2 border-slate-100 rounded-2xl focus:border-primary focus:outline-none font-bold text-slate-800 transition-all"
-                placeholder="10"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">g/u</span>
-            </div>
-          </div>
-
-          {/* 인슐린 민감도 (ISF) */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-black text-slate-600">
-              인슐린 민감도 (ISF)
-              <div className="group relative ml-1 cursor-help">
-                <Info className="w-4 h-4 text-slate-400" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  인슐린 1단위가 낮추는 혈당량(mg/dL)입니다.
-                </div>
-              </div>
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={formData.isf}
-                onChange={(e) => setFormData({ ...formData, isf: Number(e.target.value) })}
-                className="w-full px-4 py-3 bg-[#FAFAFB] border-2 border-slate-100 rounded-2xl focus:border-primary focus:outline-none font-bold text-slate-800 transition-all"
-                placeholder="50"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mg/dL</span>
-            </div>
-          </div>
-
-          {/* 목표 혈당 (Target BG) */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-black text-slate-600">
-              목표 혈당
-              <div className="group relative ml-1 cursor-help">
-                <Info className="w-4 h-4 text-slate-400" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  교정 계산 시 목표로 하는 혈당값입니다.
-                </div>
-              </div>
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={formData.targetBG}
-                onChange={(e) => setFormData({ ...formData, targetBG: Number(e.target.value) })}
-                className="w-full px-4 py-3 bg-[#FAFAFB] border-2 border-slate-100 rounded-2xl focus:border-primary focus:outline-none font-bold text-slate-800 transition-all"
-                placeholder="120"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">mg/dL</span>
-            </div>
-          </div>
-
-          {/* 인슐린 활성 시간 (DIA) */}
-          <div className="space-y-2">
-            <label className="flex items-center text-sm font-black text-slate-600">
-              인슐린 활성 시간 (DIA)
-              <div className="group relative ml-1 cursor-help">
-                <Info className="w-4 h-4 text-slate-400" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  투여된 인슐린이 체내에서 효과를 내는 시간(시간)입니다.
-                </div>
-              </div>
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={formData.dia}
-                step="0.5"
-                onChange={(e) => setFormData({ ...formData, dia: Number(e.target.value) })}
-                className="w-full px-4 py-3 bg-[#FAFAFB] border-2 border-slate-100 rounded-2xl focus:border-primary focus:outline-none font-bold text-slate-800 transition-all"
-                placeholder="4"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">시간</span>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={handleSave}
-          className="w-full bg-[#3182F6] text-white py-[18px] rounded-2xl font-bold active:scale-95 transition-all flex items-center justify-center space-x-2 shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
-        >
-          <Save className="w-5 h-5" />
-          <span>설정 저장하기</span>
-        </button>
+        <p className="text-[13px] text-text-muted mt-2 font-medium">
+          더 정확한 인슐린 계산을 위해 개인 설정값을 유지해 주세요.
+        </p>
       </section>
 
-      {/* 백업 및 복구 섹션 */}
-      <section className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 space-y-6">
-        <h2 className="text-[20px] font-black text-gray-900 flex items-center">
-          <Download className="w-6 h-6 mr-2 text-gray-800" />
-          데이터 관리 📦
-        </h2>
-        <p className="text-sm text-slate-500 font-medium leading-relaxed">
-          투여 기록과 개인 설정을 백업하여 기기를 바꾸거나 재설치 시에도 안전하게 복구할 수 있습니다.
-        </p>
+      {/* 개인 설정 그룹 */}
+      <section className="bg-white rounded-lg shadow-lds border border-gray-100 mx-2 overflow-hidden">
+        <div className="p-5 border-b border-gray-50 flex items-center gap-2 bg-gray-50/50">
+          <HugeiconsIcon icon={Settings01Icon} size={18} className="text-brand-500" />
+          <span className="text-[14px] font-bold text-text-main">계산 계수 설정</span>
+        </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            {/* 탄수화물 계수 (ICR) */}
+            <div className="space-y-2.5">
+              <label className="flex items-center text-[13px] font-bold text-text-sub">
+                탄수화물 계수 (ICR)
+                <div className="group relative ml-1 cursor-help">
+                  <HugeiconsIcon icon={InformationCircleIcon} size={14} className="text-gray-300" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-gray-800 text-white text-[10px] rounded-sm shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 leading-relaxed font-medium">
+                    인슐린 1단위가 처리하는 탄수화물 양(g)입니다.
+                  </div>
+                </div>
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={formData.icr}
+                  onChange={(e) => setFormData({ ...formData, icr: Number(e.target.value) })}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                  placeholder="10"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-bold text-text-muted">g/u</span>
+              </div>
+            </div>
+
+            {/* 인슐린 민감도 (ISF) */}
+            <div className="space-y-2.5">
+              <label className="flex items-center text-[13px] font-bold text-text-sub">
+                인슐린 민감도 (ISF)
+                <div className="group relative ml-1 cursor-help">
+                  <HugeiconsIcon icon={InformationCircleIcon} size={14} className="text-gray-300" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2.5 bg-gray-800 text-white text-[10px] rounded-sm shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 leading-relaxed font-medium">
+                    인슐린 1단위가 낮추는 혈당량(mg/dL)입니다.
+                  </div>
+                </div>
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={formData.isf}
+                  onChange={(e) => setFormData({ ...formData, isf: Number(e.target.value) })}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                  placeholder="50"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-bold text-text-muted">mg/dL</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* 목표 혈당 (Target BG) */}
+              <div className="space-y-2.5">
+                <label className="flex items-center text-[13px] font-bold text-text-sub">
+                  목표 혈당
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={formData.targetBG}
+                    onChange={(e) => setFormData({ ...formData, targetBG: Number(e.target.value) })}
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                    placeholder="120"
+                  />
+                  <span className="absolute right-10 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-muted">mg/dL</span>
+                </div>
+              </div>
+
+              {/* 인슐린 활성 시간 (DIA) */}
+              <div className="space-y-2.5">
+                <label className="flex items-center text-[13px] font-bold text-text-sub">
+                  활성 시간
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={formData.dia}
+                    step="0.5"
+                    onChange={(e) => setFormData({ ...formData, dia: Number(e.target.value) })}
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                    placeholder="4"
+                  />
+                  <span className="absolute right-10 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-muted">시간</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button
-            onClick={handleExport}
-            className="flex flex-col items-center justify-center py-8 bg-[#FAFAFB] border border-slate-100 rounded-2xl cursor-pointer active:scale-95 transition-all space-y-2 group"
+            onClick={handleSave}
+            className="w-full lds-button-primary py-4 text-[15px] flex items-center justify-center gap-2 mt-4"
           >
-            <Download className="w-8 h-8 text-[#3182F6]" />
-            <span className="text-[14px] font-bold text-gray-700">백업 만들기</span>
+            <HugeiconsIcon icon={FloppyDiskIcon} size={18} strokeWidth={2.5} />
+            <span>설정 저장하기</span>
           </button>
-          
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center py-8 bg-[#FAFAFB] border border-slate-100 rounded-2xl cursor-pointer active:scale-95 transition-all space-y-2 group"
-          >
-            <Upload className="w-8 h-8 text-[#3182F6]" />
-            <span className="text-[14px] font-bold text-gray-700">데이터 복구</span>
-          </button>
+        </div>
+      </section>
+
+      {/* 데이터 관리 그룹 */}
+      <section className="bg-white rounded-lg shadow-lds border border-gray-100 mx-2 overflow-hidden">
+        <div className="p-5 border-b border-gray-50 flex items-center gap-2 bg-gray-50/50">
+          <HugeiconsIcon icon={DatabaseIcon} size={18} className="text-brand-500" />
+          <span className="text-[14px] font-bold text-text-main">데이터 관리</span>
+        </div>
+
+        <div className="p-6">
+          <p className="text-[12px] text-text-muted font-medium mb-6 leading-relaxed">
+            기록된 데이터를 백업 파일로 저장하거나, <br />이전에 저장한 데이터파일로부터 복구할 수 있습니다.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={handleExport}
+              className="flex flex-col items-center justify-center py-6 bg-white border border-gray-100 rounded-sm hover:bg-gray-50 transition-all gap-2 group"
+            >
+              <HugeiconsIcon icon={CloudDownloadIcon} size={24} className="text-brand-500 group-hover:scale-110 transition-transform" />
+              <span className="text-[13px] font-bold text-text-sub">데이터 백업</span>
+            </button>
+            
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex flex-col items-center justify-center py-6 bg-white border border-gray-100 rounded-sm hover:bg-gray-50 transition-all gap-2 group"
+            >
+              <HugeiconsIcon icon={CloudUploadIcon} size={24} className="text-brand-500 group-hover:scale-110 transition-transform" />
+              <span className="text-[13px] font-bold text-text-sub">데이터 복구</span>
+            </button>
+          </div>
         </div>
         
         <input
@@ -256,30 +238,8 @@ export default function Settings() {
         />
       </section>
 
-      {/* 실험실 / 개발자 도구 섹션 */}
-      {isAdmin(user) && (
-        <section className="bg-rose-50/50 p-6 rounded-3xl border border-rose-100 space-y-4">
-          <h2 className="text-[18px] font-black text-rose-900 flex items-center">
-            <Database className="w-5 h-5 mr-2" />
-            실험실 기능 (테스트용) 🧪
-          </h2>
-          <p className="text-xs text-rose-700 font-medium leading-relaxed">
-            혈당 변화 추이를 즉시 확인하기 위해 최근 14일간의 가상 데이터를 생성합니다. 
-            실제 데이터와 섞일 수 있으니 주의해 주세요.
-          </p>
-          <button
-            onClick={handleSeedData}
-            disabled={isSeeding}
-            className={twMerge(
-              "w-full bg-white text-rose-600 border-2 border-rose-200 py-[14px] rounded-2xl font-bold active:scale-95 transition-all flex items-center justify-center space-x-2 shadow-sm",
-              isSeeding && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            {isSeeding ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-            <span>{isSeeding ? '데이터 생성 중...' : '14일치 더미 데이터 생성하기'}</span>
-          </button>
-        </section>
-      )}
+      {/* 관리자 도구 */}
+      <SeedingCard />
     </div>
   );
 }
