@@ -21,7 +21,7 @@ const SIDE_ITEMS_RIGHT = [
 export default function BottomNav({ activeTab, onTabChange, onOpenCalculator }: BottomNavProps) {
 
   return (
-    <nav 
+    <nav
       className="fixed left-0 right-0 max-w-[500px] mx-auto bg-white border-t border-gray-100 h-[80px] flex justify-around items-center z-50 pb-safe shadow-lds overflow-visible transition-all duration-300 ease-out"
       style={{ bottom: 'var(--viewport-bottom-offset, 0px)' }}
     >
@@ -32,9 +32,8 @@ export default function BottomNav({ activeTab, onTabChange, onOpenCalculator }: 
           <button
             key={id}
             onClick={() => onTabChange(id)}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-1.5 cursor-pointer transition-colors ${
-              isActive ? 'text-brand-500' : 'text-text-muted hover:text-text-sub'
-            }`}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1.5 cursor-pointer transition-colors ${isActive ? 'text-brand-500' : 'text-text-muted hover:text-text-sub'
+              }`}
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
           >
@@ -71,9 +70,8 @@ export default function BottomNav({ activeTab, onTabChange, onOpenCalculator }: 
           <button
             key={id}
             onClick={() => onTabChange(id)}
-            className={`flex flex-col items-center justify-center flex-1 h-full gap-1.5 cursor-pointer transition-colors ${
-              isActive ? 'text-brand-500' : 'text-text-muted hover:text-text-sub'
-            }`}
+            className={`flex flex-col items-center justify-center flex-1 h-full gap-1.5 cursor-pointer transition-colors ${isActive ? 'text-brand-500' : 'text-text-muted hover:text-text-sub'
+              }`}
             aria-label={label}
             aria-current={isActive ? 'page' : undefined}
           >

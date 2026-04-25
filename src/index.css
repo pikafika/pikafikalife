@@ -38,13 +38,30 @@ button:active:not(:disabled) {
 }
 
 .lds-card {
-  @apply bg-white border border-gray-200 rounded-md shadow-lds;
+  @apply bg-white border border-gray-100 rounded-3xl shadow-lds;
 }
 
 .lds-button-primary {
-  @apply bg-brand-500 text-white font-bold py-4 px-6 rounded-sm active:bg-brand-600 transition-all text-center;
+  @apply bg-brand-500 text-white font-black py-4 px-6 rounded-2xl active:bg-brand-600 transition-all text-center shadow-lg shadow-brand-500/20;
 }
 
 .lds-button-secondary {
-  @apply bg-white border border-gray-300 text-text-main font-bold py-4 px-6 rounded-sm active:bg-gray-50 transition-all text-center;
+  @apply bg-white border border-gray-200 text-text-main font-black py-4 px-6 rounded-2xl active:bg-gray-50 transition-all text-center shadow-sm;
+}
+
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.glass-morphism {
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
+}
+
+.shadow-premium {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -5px rgba(0, 0, 0, 0.03);
 }

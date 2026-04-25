@@ -13,6 +13,8 @@ import {
 } from '@hugeicons/core-free-icons';
 import { useEffect } from 'react';
 import { FoodSearch } from './FoodSearch';
+import { AIAnalysisOverlay } from './AIAnalysisOverlay';
+import { ManualFoodEntry } from './ManualFoodEntry';
 import { useInsulinCalc } from '../../hooks/useInsulinCalc';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useAIStore } from '../../store/useAIStore';
@@ -44,6 +46,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
   const [memo, setMemo] = useState('');
   const [lastSavedLog, setLastSavedLog] = useState<LogEntry | null>(null);
+  const [showAI, setShowAI] = useState(false);
+  const [showManual, setShowManual] = useState(false);
 
   const { addLog, logs } = useHistoryStore();
   const { setInsights, setGenerating } = useAIStore();
@@ -130,34 +134,34 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
   ];
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-white flex flex-col overflow-hidden shadow-2xl border-x border-slate-50 h-[100dvh] w-full max-w-[500px] mx-auto">
+    <div className="fixed inset-0 z-[9999] bg-slate-50/80 backdrop-blur-xl flex flex-col overflow-hidden shadow-2xl h-[100dvh] w-full max-w-[500px] mx-auto border-x border-white/20">
       {/* 헤더 / 상단 단계 표시 */}
-      <div className="px-6 pt-6 pb-4 bg-white z-50 flex flex-col shrink-0 border-b border-gray-100 relative">
-        <div className="flex items-center justify-between mb-6">
+    <div className="px-6 pt-8 pb-5 glass-morphism z-50 flex flex-col shrink-0 border-b border-gray-100/50 relative">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex flex-col">
-            <h1 className="text-[18px] font-bold text-text-main tracking-tight flex items-center gap-2">
-              <span className="w-1 h-5 bg-brand-500 rounded-full"></span>
+            <h1 className="text-[20px] font-black text-text-main tracking-tight flex items-center gap-2.5">
+              <span className="w-1.5 h-6 bg-brand-500 rounded-full shadow-lg shadow-brand-500/30"></span>
               {steps.find(s => s.id === step)?.title}
             </h1>
-            <span className="text-[11px] font-bold text-text-muted mt-0.5 uppercase tracking-wider">Insulin Calculator</span>
+            <span className="text-[11px] font-black text-brand-500/60 mt-1 uppercase tracking-widest">Insulin Intelligent Core</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-full px-3">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-slate-100/50 p-2 rounded-2xl px-4 border border-white/40">
               {steps.map((s) => (
                 <div
                   key={s.id}
                   className={twMerge(
-                    "h-1.5 rounded-full transition-all duration-500",
-                    step === s.id ? "bg-brand-500 w-4" : (step > s.id ? "bg-brand-200 w-1.5" : "bg-gray-200 w-1.5")
+                    "h-2 rounded-full transition-all duration-700",
+                    step === s.id ? "bg-brand-500 w-6 shadow-md shadow-brand-500/20" : (step > s.id ? "bg-brand-200 w-2" : "bg-gray-200 w-2")
                   )}
                 />
               ))}
             </div>
             <button 
               onClick={onClose}
-              className="p-2 text-text-main bg-white border border-gray-100 rounded-md active:bg-gray-50 transition-all shadow-sm"
+              className="p-3 text-text-main bg-white border border-gray-100 rounded-2xl active:scale-90 transition-all shadow-sm"
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
+              <HugeiconsIcon icon={Cancel01Icon} size={22} strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -179,16 +183,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
             </div>
 
             {/* 숫자 키패드 */}
-            <div className="grid grid-cols-3 gap-3 flex-1 max-h-[400px]">
+            <div className="grid grid-cols-3 gap-4 flex-1 max-h-[450px]">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'delete'].map((key, i) => (
                 <button
                   key={i}
                   disabled={key === ''}
                   onClick={() => handleKeypadClick(key)}
                   className={twMerge(
-                    "h-[68px] rounded-md text-xl font-bold transition-all active:bg-gray-50 border",
-                    key === '' ? "invisible" : "bg-white text-text-main border-gray-100 shadow-sm",
-                    key === 'delete' ? "text-brand-500 bg-brand-50 border-brand-100" : ""
+                    "h-[72px] rounded-3xl text-2xl font-black transition-all active:scale-95 border",
+                    key === '' ? "invisible" : "bg-white text-text-main border-slate-100 shadow-premium hover:border-brand-200",
+                    key === 'delete' ? "text-brand-500 bg-brand-50 border-brand-100 shadow-brand-500/5" : ""
                   )}
                 >
                   {key === 'delete' ? '←' : key}
@@ -199,39 +203,48 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
         )}
 
         {step === 2 && (
-          <div className="transition-all duration-500 -mx-6 overflow-visible">
-            <div className="px-6 mb-6">
-              <div className="bg-brand-500 p-6 rounded-lg shadow-md flex justify-between items-center text-white relative overflow-hidden">
-                <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/10 rounded-full -mb-8 -mr-8 blur-xl"></div>
+          <div className="transition-all duration-500 -mx-6">
+            <div className="px-6 mb-8 pt-4">
+              <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-8 rounded-[40px] shadow-xl shadow-brand-500/30 flex justify-between items-center text-white relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform duration-1000"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+                
                 <div className="relative z-10">
-                  <div className="text-[11px] font-bold opacity-80 mb-1">현재 혈당</div>
-                  <div className="text-[20px] font-bold">{currentBG} <span className="text-[13px]">mg/dL</span></div>
+                  <div className="text-[11px] font-black opacity-70 mb-1.5 tracking-widest uppercase">Current BG</div>
+                  <div className="text-[28px] font-black">{currentBG} <span className="text-[13px] opacity-80">mg/dL</span></div>
                 </div>
+                
+                <div className="h-10 w-[1px] bg-white/20"></div>
+
                 <div className="text-right relative z-10">
-                  <div className="text-[11px] font-bold opacity-80 mb-1">총 탄수화물</div>
-                  <div className="text-[24px] font-bold leading-none">{totalCarbs.toFixed(1)} <span className="text-[14px]">g</span></div>
+                  <div className="text-[11px] font-black opacity-70 mb-1.5 tracking-widest uppercase">Carbs Total</div>
+                  <div className="text-[32px] font-black leading-none">{totalCarbs.toFixed(1)} <span className="text-[14px] opacity-80">g</span></div>
                 </div>
               </div>
             </div>
             
-            
-            <FoodSearch selectedFoods={selectedFoods} onFoodsChange={setSelectedFoods} />
+            <FoodSearch 
+              selectedFoods={selectedFoods} 
+              onFoodsChange={setSelectedFoods} 
+              onOpenAI={() => setShowAI(true)}
+              onOpenManual={() => setShowManual(true)}
+            />
           </div>
         )}
 
         {step === 3 && (
           <div className="flex-1 flex flex-col transition-all duration-500">
-            <div className="bg-white rounded-lg p-10 shadow-lds border border-gray-100 mb-8 flex flex-col items-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-brand-500"></div>
-              <div className="text-text-sub font-bold text-[14px] mb-4">권장 인슐린 투여량</div>
-              <div className="flex items-baseline justify-center gap-1 mb-8">
-                <div className="text-[72px] font-bold text-brand-500 tracking-tighter leading-none">
+            <div className="bg-white rounded-[40px] p-10 shadow-premium border border-gray-100 mb-8 flex flex-col items-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 to-soft-blue"></div>
+              <div className="text-text-sub font-black text-[15px] mb-6 tracking-tight">권장 인슐린 투여량</div>
+              <div className="flex items-baseline justify-center gap-1.5 mb-10">
+                <div className="text-[80px] font-black text-brand-500 tracking-tighter leading-none animate-in zoom-in duration-700">
                   {totalInsulin.toFixed(1)}
                 </div>
-                <span className="text-[20px] font-bold text-brand-300">u</span>
+                <span className="text-[24px] font-black text-brand-300">u</span>
               </div>
 
-              <div className="w-full space-y-5 border-t border-gray-100 pt-8">
+              <div className="w-full space-y-6 border-t border-slate-50 pt-10">
                 <DetailRow
                   label="식사 인슐린"
                   value={mealInsulin.toFixed(1)}
@@ -244,24 +257,26 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
                   unit="u"
                   color="bg-warm-500"
                 />
-                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-md border border-gray-100">
-                  <div className="flex items-center gap-2 text-text-sub text-[13px] font-bold">
-                    <HugeiconsIcon icon={InformationCircleIcon} size={16} strokeWidth={2.5} />
+                <div className="flex justify-between items-center bg-slate-50/80 backdrop-blur-sm p-5 rounded-3xl border border-slate-100">
+                  <div className="flex items-center gap-3 text-text-sub text-[13px] font-black">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <HugeiconsIcon icon={InformationCircleIcon} size={16} className="text-brand-500" strokeWidth={2.5} />
+                    </div>
                     잔류 인슐린(IOB) 반영
                   </div>
-                  <div className="font-bold text-text-main text-[15px]">-{currentIOB.toFixed(1)} <span className="text-[12px]">u</span></div>
+                  <div className="font-black text-text-main text-[16px]">-{currentIOB.toFixed(1)} <span className="text-[12px] opacity-60">u</span></div>
                 </div>
               </div>
             </div>
 
             {currentBG < 70 && (
-              <div className="bg-warm-50 border border-warm-100 p-5 rounded-md flex items-start gap-4 mb-8">
-                <div className="w-10 h-10 rounded-md bg-warm-100 flex items-center justify-center shrink-0">
+              <div className="bg-warm-50 border border-warm-100 p-5 rounded-3xl flex items-start gap-4 mb-8">
+                <div className="w-10 h-10 rounded-2xl bg-warm-100 flex items-center justify-center shrink-0">
                   <HugeiconsIcon icon={Alert01Icon} className="text-warm-600" size={20} strokeWidth={3} />
                 </div>
                 <div>
-                  <div className="font-bold text-warm-800 text-[14px] mb-0.5">저혈당 주의 🚨</div>
-                  <div className="text-warm-600 text-[12px] font-medium leading-relaxed">
+                  <div className="font-black text-warm-800 text-[14px] mb-0.5">저혈당 주의 🚨</div>
+                  <div className="text-warm-600 text-[12px] font-bold leading-relaxed">
                     수치가 낮습니다. 투여 전 저혈당 간식을 챙겨드세요.
                   </div>
                 </div>
@@ -271,11 +286,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1">
                 <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="text-brand-500" />
-                <span className="text-text-sub font-bold text-[13px]">참고 메모</span>
+                <span className="text-text-sub font-black text-[14px]">참고 메모</span>
               </div>
               <textarea
-                className="w-full bg-white border border-gray-200 rounded-md p-4 focus:ring-4 focus:ring-brand-50 focus:border-brand-500 outline-none transition-all shadow-sm text-[14px] font-medium"
-                rows={3}
+                className="w-full bg-white border border-gray-100 rounded-[32px] p-6 focus:ring-4 focus:ring-brand-50 focus:border-brand-500 outline-none transition-all shadow-premium text-[14px] font-bold min-h-[120px]"
                 placeholder="식사 종류나 컨디션 등 기록하고 싶은 내용을 적어주세요."
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}
@@ -341,6 +355,20 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
           </div>
         )}
       </div>
+
+      {showAI && (
+        <AIAnalysisOverlay 
+          onClose={() => setShowAI(false)} 
+          onAddFoods={(foods) => setSelectedFoods(prev => [...prev, ...foods.map(f => ({ ...f, count: 1 }))])}
+        />
+      )}
+
+      {showManual && (
+        <ManualFoodEntry 
+          onClose={() => setShowManual(false)} 
+          onAdd={(food) => setSelectedFoods(prev => [...prev, { ...food, count: 1 }])}
+        />
+      )}
 
       {step < 4 && (
         <div 

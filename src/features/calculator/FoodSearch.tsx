@@ -22,6 +22,8 @@ interface SelectedFood extends Food {
 interface FoodSearchProps {
   onFoodsChange: (foods: SelectedFood[]) => void;
   selectedFoods: SelectedFood[];
+  onOpenAI: () => void;
+  onOpenManual: () => void;
 }
 
 const CATEGORIES = [
@@ -36,7 +38,7 @@ const CATEGORIES = [
   { id: 'cvs', name: '편의점', icon: '🏪' },
 ];
 
-export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedFoods }) => {
+export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedFoods, onOpenAI, onOpenManual }) => {
   const { customFoods } = useCustomFoodStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
@@ -79,8 +81,11 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
     <>
       {/* 검색 및 AI 버튼 섹션 - 상단 라운드 디자인 적용 */}
       <div className="p-6 pb-4 space-y-4 bg-white rounded-t-[48px] shadow-[0_-20px_50px_rgba(0,0,0,0.03)] border-t border-slate-50 relative z-10">
-        {/* AI 분석 버튼 (Premium Placeholder) */}
-        <button className="w-full bg-gradient-to-r from-brand-50 via-soft-blue to-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm">
+        {/* AI 분석 버튼 (Premium UI) */}
+        <button 
+          onClick={onOpenAI}
+          className="w-full bg-gradient-to-r from-brand-50 via-soft-blue to-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm"
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-brand-500/20 shadow-lg">
               <HugeiconsIcon icon={Camera01Icon} size={22} className="text-brand-500" strokeWidth={2.5} />
@@ -90,89 +95,118 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
               <div className="text-[12px] font-bold text-brand-400">카메라로 식단을 바로 인식해요</div>
             </div>
           </div>
-          <div className="bg-brand-500 text-white px-3 py-1.5 rounded-xl text-[11px] font-black">신규</div>
+          <div className="bg-brand-500 text-white px-3 py-1.5 rounded-xl text-[11px] font-black animate-pulse">PRO</div>
         </button>
 
-        {/* 검색창 */}
-        <div className="relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-500 transition-colors">
-            <HugeiconsIcon icon={Search01Icon} size={20} strokeWidth={2.5} />
+        {/* 검색창 및 직접 입력 */}
+        <div className="flex gap-2">
+          <div className="relative group flex-1">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-500 transition-colors">
+              <HugeiconsIcon icon={Search01Icon} size={20} strokeWidth={2.5} />
+            </div>
+            <input
+              type="text"
+              placeholder="음식 검색..."
+              className="w-full bg-slate-50/50 rounded-2xl py-4 pl-12 pr-12 focus:outline-none focus:ring-4 focus:ring-brand-50/50 focus:bg-white border border-slate-100 transition-all font-bold text-[15px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-sub"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
+              </button>
+            )}
           </div>
-          <input
-            type="text"
-            placeholder="어떤 음식을 드시나요?"
-            className="w-full bg-slate-50/50 rounded-3xl py-4 pl-12 pr-12 focus:outline-none focus:ring-4 focus:ring-brand-50/50 focus:bg-white border border-slate-100 transition-all font-bold text-[15px]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-sub"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
-            </button>
-          )}
+          <button 
+            onClick={onOpenManual}
+            className="px-6 bg-white border border-slate-100 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all"
+          >
+            <HugeiconsIcon icon={PlusSignIcon} size={18} className="text-brand-500" strokeWidth={3} />
+            <span className="text-[14px] font-black text-text-main whitespace-nowrap">직접 입력</span>
+          </button>
         </div>
       </div>
 
       {/* 카테고리 필터 - Sticky 적용 */}
-      <div className="sticky top-0 z-40 flex overflow-x-auto -mx-6 px-6 py-4 gap-2.5 no-scrollbar bg-white shadow-sm border-b border-slate-50">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={twMerge(
-              "whitespace-nowrap px-4 py-2.5 rounded-2xl text-[14px] font-black transition-all flex items-center gap-2",
-              activeCategory === cat.id
-                ? 'bg-brand-500 text-white shadow-brand-500/30 shadow-lg scale-105'
-                : 'bg-slate-50 text-text-sub hover:bg-slate-100 border border-slate-100'
-            )}
-          >
-            <span>{cat.icon}</span>
-            {cat.name}
-          </button>
-        ))}
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-50 mb-6">
+        <div className="relative group">
+          {/* 좌측 페이드 */}
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          
+          <div className="flex overflow-x-auto py-4 no-scrollbar">
+            <div className="flex pl-10 pr-6 gap-2.5">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={twMerge(
+                    "whitespace-nowrap px-5 py-3 rounded-2xl text-[14px] font-black transition-all flex items-center gap-2",
+                    activeCategory === cat.id
+                      ? 'bg-brand-500 text-white shadow-brand-500/30 shadow-lg scale-105'
+                      : 'bg-slate-50 text-text-sub hover:bg-slate-100 border border-slate-100'
+                  )}
+                >
+                  <span className="text-[16px]">{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 우측 페이드 */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+        </div>
       </div>
 
       <div className="px-6 pb-8">
-        {/* 오늘의 레시피 조합 (선택된 음식) */}
+        {/* 오늘의 레시피 조합 (선택된 음식) - 가로 슬라이드바 형식 */}
         {selectedFoods.length > 0 && (
-          <div className="mb-8 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-2 mb-4 px-1">
-              <HugeiconsIcon icon={ChefHatIcon} size={18} className="text-brand-500" strokeWidth={2.5} />
-              <h3 className="text-[15px] font-black text-text-main">식사 구성 미리보기</h3>
+          <div className="mb-10 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center justify-between mb-4 px-1">
+              <div className="flex items-center gap-2">
+                <HugeiconsIcon icon={ChefHatIcon} size={18} className="text-brand-500" strokeWidth={2.5} />
+                <h3 className="text-[15px] font-black text-text-main">식사 구성 미리보기</h3>
+              </div>
+              <span className="text-[11px] font-black text-brand-500 bg-brand-50 px-2 py-1 rounded-md">
+                {selectedFoods.length}개 선택됨
+              </span>
             </div>
-            <div className="flex flex-col gap-3">
+            
+            <div className="flex overflow-x-auto px-6 gap-4 no-scrollbar pb-2">
               {selectedFoods.map((food) => (
-                <div key={food.id} className="flex items-center justify-between bg-white border border-slate-50 p-4 rounded-3xl shadow-soft">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[24px]">
-                      {food.emoji}
-                    </div>
-                    <div>
-                      <div className="font-black text-text-main text-[15px]">{food.name}</div>
-                      <div className="text-[13px] text-brand-500 font-bold">
-                        {(food.carbPer * food.count).toFixed(1)}g 탄수화물
-                      </div>
-                    </div>
+                <div key={food.id} className="flex-shrink-0 w-[180px] bg-white border border-slate-100 p-5 rounded-[32px] shadow-premium relative group">
+                  <button 
+                    onClick={() => handleRemoveFood(food.id)}
+                    className="absolute -top-2 -right-2 w-8 h-8 bg-warm-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={3} />
+                  </button>
+                  
+                  <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-[28px] mb-4 group-hover:scale-110 transition-transform">
+                    {food.emoji}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-slate-50 rounded-2xl overflow-hidden p-1 border border-slate-100/50">
-                      <button
-                        onClick={() => handleCountChange(food.id, -0.5)}
-                        className="w-8 h-8 rounded-xl hover:bg-white text-text-sub flex items-center justify-center transition-all bg-white/40 shadow-sm"
-                      >
-                        <HugeiconsIcon icon={MinusSignIcon} size={16} strokeWidth={3} />
-                      </button>
-                      <span className="w-10 text-center font-black text-[15px] text-text-main">{food.count}</span>
-                      <button
-                        onClick={() => handleCountChange(food.id, 0.5)}
-                        className="w-8 h-8 rounded-xl hover:bg-white text-brand-500 flex items-center justify-center transition-all bg-white/40 shadow-sm"
-                      >
-                        <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={3} />
-                      </button>
-                    </div>
+                  
+                  <div className="mb-4 h-10">
+                    <div className="font-black text-text-main text-[14px] line-clamp-2 leading-tight">{food.name}</div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-1 border border-slate-100">
+                    <button
+                      onClick={() => handleCountChange(food.id, -0.5)}
+                      className="w-8 h-8 rounded-xl hover:bg-white text-text-sub flex items-center justify-center transition-all bg-white/40 shadow-sm"
+                    >
+                      <HugeiconsIcon icon={MinusSignIcon} size={14} strokeWidth={3} />
+                    </button>
+                    <span className="text-center font-black text-[13px] text-text-main">{food.count}</span>
+                    <button
+                      onClick={() => handleCountChange(food.id, 0.5)}
+                      className="w-8 h-8 rounded-xl hover:bg-white text-brand-500 flex items-center justify-center transition-all bg-white/40 shadow-sm"
+                    >
+                      <HugeiconsIcon icon={PlusSignIcon} size={14} strokeWidth={3} />
+                    </button>
                   </div>
                 </div>
               ))}
