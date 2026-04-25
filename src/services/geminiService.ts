@@ -58,6 +58,28 @@ export class GeminiService {
       throw error;
     }
   }
+  /**
+   * 백엔드 API를 통해 이미지 분석 (음식 또는 영양정보)
+   */
+  async analyzeImage(image: string, mode: 'food' | 'label', userContext?: string): Promise<any> {
+    try {
+      const response = await fetch(this.endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "vision", image, mode, userContext })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Server Error: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Gemini Vision Error:", error);
+      throw error;
+    }
+  }
 }
 
 /**

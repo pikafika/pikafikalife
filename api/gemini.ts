@@ -73,34 +73,34 @@ export default async function handler(req: any, res: any) {
 
     } else if (type === "coaching") {
       if (!logs || logs.length === 0) {
-         // 데이터 없을 시
         return res.status(200).json({ report: "아직 분석할 데이터가 충분하지 않습니다. 평소처럼 식사와 혈당 기록을 남겨주시면 정밀한 분석 리포트를 드릴 수 있어요! ✨" });
       }
 
       const prompt = `
         You are a specialized Lifestyle & Wellness Coach for Type 1 Diabetics. 
-        IMPORTANT: This is for lifestyle guidance, NOT professional medical advice or diagnosis. 
-        
         Analyze the recent logs and provide a professional, encouraging coaching report.
-        
         Recent Logs: ${JSON.stringify(logs)}
         Past Coaching Summaries: ${history?.join("\n") || "None"}
-        
-        The report should include:
-        1. Overall Stability Trend
-        2. Time In Range (TIR) estimation
-        3. Notable Patterns
-        4. Actionable Lifestyle items for the next 24 hours.
-        
-        Tone: High-premium, professional, encouraging, and warm. 
-        Context Awareness: Acknowledge improvements based on past coaching.
-        Language: Korean.
-        Return the report as a clean, structured text.
+        Language: Korean. Return a clean, structured text.
       `;
 
       const result = await model.generateContent(prompt);
       return res.status(200).json({ report: result.response.text() });
-      
+
+    } else if (type === "vision") {
+      const { image, mode, userContext } = req.body;
+      if (!image) return res.status(400).json({ error: "Image is required" });
+
+      const prompt = mode === 'food' 
+        ? `Analyze this food image. JSON: { items: [{id, name, amount, unit, carbs, icon}], advice }. Korean.`
+        : `Extract nutrition facts (carbs, sugars, serving) from this label. JSON: { productName, totalCarbs, sugars, servingSize, servingUnit, advice }. Korean.`;
+
+      const imageParts = [{ inlineData: { data: image.split(",")[1], mimeType: "image/jpeg" } }];
+      const result = await model.generateContent([prompt, ...imageParts]);
+      const text = result.response.text();
+      const cleanJson = text.replace(/```json|```/g, "").trim();
+      return res.status(200).json(JSON.parse(cleanJson));
+
     } else {
       return res.status(400).json({ error: "Invalid type requested" });
     }
