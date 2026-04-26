@@ -92,14 +92,63 @@ export default async function handler(req: any, res: any) {
       if (!image) return res.status(400).json({ error: "Image is required" });
 
       const prompt = mode === 'food' 
-        ? `Analyze this food image. JSON: { items: [{id, name, amount, unit, carbs, icon}], advice }. Korean.`
-        : `Extract nutrition facts (carbs, sugars, serving) from this label. JSON: { productName, totalCarbs, sugars, servingSize, servingUnit, advice }. Korean.`;
+        ? `
+          You are an AI nutritionist for Type 1 Diabetics. 
+          Analyze the provided food image and user context.
+          User Context: "${userContext || "None"}"
+          
+          Identify all main ingredients/dishes and estimate their carbohydrate content.
+          Format the result as a JSON object:
+          {
+            "items": [
+              {
+                "id": "unique_id_string",
+                "name": "음식 이름 (한글)",
+                "amount": number (양),
+                "unit": "단위 (g, 인분, 개 등)",
+                "carbs": number (추정 탄수화물 g),
+                "icon": "Emoji"
+              }
+            ],
+            "advice": "당뇨인을 위한 짧고 친절한 식사 조언 (한글, 1~2문장)"
+          }
+          Return ONLY the JSON.
+        `
+        : `
+          Extract nutrition information from this food label.
+          User Context: "${userContext || "None"}"
+          
+          Focus on finding total carbohydrates, sugars, and serving size.
+          Format the result as a JSON object:
+          {
+            "productName": "제품명 (인식 불가시 가공식품)",
+            "totalCarbs": number (총 탄수화물 g),
+            "sugars": number (당류 g),
+            "servingSize": number (1회 제공량 숫자),
+            "servingUnit": "단위 (g, ml, 개 등)",
+            "advice": "이 제품 섭취 시 주의사항 (당류 함량 위주 조언, 한글, 1~2문장)"
+          }
+          Return ONLY the JSON.
+        `;
 
       const imageParts = [{ inlineData: { data: image.split(",")[1], mimeType: "image/jpeg" } }];
       const result = await model.generateContent([prompt, ...imageParts]);
       const text = result.response.text();
-      const cleanJson = text.replace(/```json|```/g, "").trim();
-      return res.status(200).json(JSON.parse(cleanJson));
+      
+      // 더 강력한 JSON 추출 로직 (백틱이나 앞뒤 텍스트 제거)
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const cleanJson = jsonMatch ? jsonMatch[0] : text.replace(/```json|```/g, "").trim();
+      
+      try {
+        const parsed = JSON.parse(cleanJson);
+        return res.status(200).json(parsed);
+      } catch (e) {
+        console.error("JSON Parse Error. Raw Text:", text);
+        return res.status(500).json({ 
+          error: "AI 응답 형식이 올바르지 않습니다.",
+          raw: text.substring(0, 100) // 디버깅용
+        });
+      }
 
     } else {
       return res.status(400).json({ error: "Invalid type requested" });

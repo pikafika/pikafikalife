@@ -28,3 +28,5 @@ dist-ssr
 # Firebase
 .firebase/
 .firebaserc
+.vercel
+.env*.local

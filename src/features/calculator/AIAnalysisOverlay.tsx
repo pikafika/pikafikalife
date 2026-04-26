@@ -105,24 +105,62 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
     const context = canvas.getContext('2d');
     
     if (context) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const base64 = canvas.toDataURL('image/jpeg');
+      // 용량 최적화를 위해 적절한 크기로 캡처 (최대 1280px)
+      const maxDim = 1280;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      
+      if (width > height && width > maxDim) {
+        height = (maxDim / width) * height;
+        width = maxDim;
+      } else if (height > maxDim) {
+        width = (maxDim / height) * width;
+        height = maxDim;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(video, 0, 0, width, height);
+      
+      // 이미지 압축 (품질 0.7)
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
       setCapturedImage(base64);
       runAIAnalysis(base64);
     }
   };
 
-  // 파일 업로드 폴백
+  // 파일 업로드 폴백 (여기도 압축 적용)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setCapturedImage(base64);
-      runAIAnalysis(base64);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const maxDim = 1280;
+        let width = img.width;
+        let height = img.height;
+        if (width > height && width > maxDim) {
+          height = (maxDim / width) * height;
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = (maxDim / height) * width;
+          height = maxDim;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        const base64 = canvas.toDataURL('image/jpeg', 0.7);
+        setCapturedImage(base64);
+        runAIAnalysis(base64);
+      };
+      img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
   };
@@ -130,21 +168,36 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
   const runAIAnalysis = async (image: string) => {
     setStep('processing');
     setIsProcessing(true);
+    setError(null);
     
     try {
+      console.log("Starting AI Analysis... (Mode:", mode, ")");
       const service = getGeminiService();
       const result = await service.analyzeImage(image, mode, userContext);
       
+      console.log("AI Analysis Result Received:", result);
+
+      if (!result || (mode === 'food' && !result.items) || (mode === 'label' && !result.totalCarbs && result.totalCarbs !== 0)) {
+        throw new Error("AI로부터 유효한 분석 데이터를 받지 못했습니다. 다시 시도해 주세요.");
+      }
+      
       if (mode === 'food') {
-        setDetectedItems(result.items || []);
-        setAiAdvice(result.advice || '');
+        // ID가 없는 경우를 대비해 보정
+        const itemsWithIds = (result.items || []).map((item: any, idx: number) => ({
+          ...item,
+          id: item.id || `detected_${Date.now()}_${idx}`
+        }));
+        setDetectedItems(itemsWithIds);
+        setAiAdvice(result.advice || '분석된 정보를 확인해 주세요.');
       } else {
         setLabelData(result);
-        setAiAdvice(result.advice || '');
+        setAiAdvice(result.advice || '영양성분표 분석 결과를 확인해 주세요.');
       }
+      
       setStep('review');
     } catch (err: any) {
-      setError(err.message || "분석에 실패했습니다.");
+      console.error("AI Analysis Failed Error:", err);
+      setError(err.message || "분석 도중 오류가 발생했습니다.");
       setStep('capture');
     } finally {
       setIsProcessing(false);
@@ -258,31 +311,36 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
         <div className="flex-1 flex flex-col relative overflow-hidden bg-black">
           {/* 실시간 비디오 영역 */}
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-            {cameraActive ? (
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                muted
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-white/40 flex flex-col items-center gap-4">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted
+              className={twMerge(
+                "w-full h-full object-cover transition-opacity duration-700",
+                cameraActive ? "opacity-100" : "opacity-0"
+              )}
+            />
+            
+            {!cameraActive && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40 gap-4 animate-pulse">
                 <HugeiconsIcon icon={Camera01Icon} size={48} />
-                <p className="text-[13px] font-bold">{error || '카메라를 준비 중입니다...'}</p>
+                <p className="text-[13px] font-bold">{error || '카메라를 연결하고 있습니다...'}</p>
               </div>
             )}
             
             {/* 가이드 오버레이 */}
-            <div className={twMerge(
-              "absolute border-2 border-white/40 rounded-[40px] pointer-events-none transition-all duration-700",
-              mode === 'food' ? "w-72 h-72" : "w-80 h-48"
-            )}>
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-500 rounded-tl-3xl -ml-1 -mt-1"></div>
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-500 rounded-tr-3xl -mr-1 -mt-1"></div>
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-500 rounded-bl-3xl -ml-1 -mb-1"></div>
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-500 rounded-br-3xl -mr-1 -mb-1"></div>
-            </div>
+            {cameraActive && (
+              <div className={twMerge(
+                "absolute border-2 border-white/40 rounded-[40px] pointer-events-none transition-all duration-700",
+                mode === 'food' ? "w-72 h-72" : "w-80 h-48"
+              )}>
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-brand-500 rounded-tl-3xl -ml-1 -mt-1"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-brand-500 rounded-tr-3xl -mr-1 -mt-1"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-brand-500 rounded-bl-3xl -ml-1 -mb-1"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-brand-500 rounded-br-3xl -mr-1 -mb-1"></div>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto p-12 flex flex-col items-center gap-8 bg-gradient-to-t from-black/80 to-transparent relative z-10">
