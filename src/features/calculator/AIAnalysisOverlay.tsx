@@ -258,8 +258,27 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
 
   return (
     <div className="fixed inset-0 z-[10000] bg-white flex flex-col overflow-hidden animate-in fade-in duration-300">
-      <canvas ref={canvasRef} className="hidden" />
+<canvas ref={canvasRef} className="hidden" />
       <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+
+      {/* 전역 에러 토스트 (어떤 단계에서도 보이도록 최상단 배치) */}
+      {error && (
+        <div className="absolute top-12 left-6 right-6 z-[2000] animate-in slide-in-from-top-10 duration-700">
+          <div className="bg-slate-900/95 backdrop-blur-xl text-white p-6 rounded-[32px] shadow-2xl flex flex-col gap-3 border border-red-500/50">
+            <div className="flex items-center gap-3 text-red-400">
+              <HugeiconsIcon icon={InformationCircleIcon} size={24} />
+              <span className="text-[15px] font-black">분석 오류 발생</span>
+            </div>
+            <p className="text-[13px] font-bold text-slate-300 leading-relaxed">{error}</p>
+            <button 
+              onClick={() => setError(null)} 
+              className="mt-2 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-[12px] font-black transition-all"
+            >
+              확인 및 다시 시도
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 상단 헤더 */}
       <div className="px-6 pt-12 pb-6 flex items-center justify-between text-text-main bg-white/80 backdrop-blur-md border-b border-slate-50 sticky top-0 z-50">
@@ -325,7 +344,7 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
             {!cameraActive && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40 gap-4 animate-pulse">
                 <HugeiconsIcon icon={Camera01Icon} size={48} />
-                <p className="text-[13px] font-bold">{error || '카메라를 연결하고 있습니다...'}</p>
+                <p className="text-[13px] font-bold">카메라를 연결하고 있습니다...</p>
               </div>
             )}
             

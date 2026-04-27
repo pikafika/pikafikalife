@@ -1,7 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const MODEL_NAME = "gemini-1.5-flash";
-
 export default async function handler(req: any, res: any) {
   // CORS Configuration
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -12,153 +8,90 @@ export default async function handler(req: any, res: any) {
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
 
-  // preflight request 무시
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  // POST 이외의 요청 거부
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
-
-  // 서버의 환경 변수에 안전하게 저장된 API 키를 읽습니다. 
-  // 프론트엔드의 VITE_ 접두어를 뗄 수 있도록 백업 처리
   const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server configuration Error: API key is missing" });
-  }
+  if (!apiKey) return res.status(500).json({ error: "API key is missing" });
 
-  const { type, logs, settings, history } = req.body;
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+  const { type, image, mode, userContext, logs, settings, history } = req.body;
+  const MODEL_NAME = "gemini-2.5-flash";
 
   try {
-    if (type === "insights") {
-      const recentLogsContext = JSON.stringify(logs?.slice(0, 10) || []);
-      const prompt = `
-        You are an expert coach for Type 1 Diabetics. 
-        Based on the following user settings and recent log data, provide 4 varied and helpful insights (Recipe, Exercise, General Tip, Personal Story).
-        
-        User Settings: ${JSON.stringify(settings || {})}
-        Recent Logs: ${recentLogsContext}
-        
-        Format the output as a JSON array of objects. 
-        Object structure:
-        {
-          "id": number,
-          "title": "string (e.g., 식단 꿀팁, 전문가 조언)",
-          "label": "string",
-          "color": "string (Tailwind classes like 'bg-warm-100 text-warm-600')",
-          "icon": "string (Emoji)",
-          "content": {
-            "subtitle": "string",
-            "description": "string",
-            "tips": ["string"],
-            "deepDive": { "title": "string", "body": "string" }
-          }
-        }
-        
-        Language: Korean. 
-        Make it feel warm, professional, and encouraging. 
-        Avoid medical jargon, explain simply.
-        Return ONLY the JSON array.
-      `;
+    // [진단] 사용 가능한 모델 목록 직접 조회
+    try {
+      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`);
+      const listData = await listResp.json();
+      console.log("Direct Model List:", listData.models?.map((m: any) => m.name));
+    } catch (e) {
+      console.error("Failed to list models via direct fetch:", e);
+    }
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      const cleanJson = text.replace(/```json|```/g, "").trim();
+    if (type === "vision") {
+      const prompt = mode === 'food' 
+        ? `당신은 1형 당뇨인을 위한 영양사입니다. 사진 속 음식을 분석하여 각 재료명, 양(숫자), 단위(g,인분 등), 탄수화물(g)을 JSON으로 반환하세요. JSON 형식: { "items": [{ "id", "name", "amount", "unit", "carbs", "icon" }], "advice" }. 한글로 답변하세요.`
+        : `영양성분표 라벨에서 제품명, 총 탄수화물(g), 당류(g), 1회 제공량 및 단위를 추출하세요. JSON 형식: { "productName", "totalCarbs", "sugars", "servingSize", "servingUnit", "advice" }. 한글로 답변하세요.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] } }
+              ]
+            }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error("Gemini Direct Error:", data);
+        throw new Error(data.error?.message || "AI 호출 실패");
+      }
+
+      const text = data.candidates[0].content.parts[0].text;
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const cleanJson = jsonMatch ? jsonMatch[0] : text.trim();
+      
       return res.status(200).json(JSON.parse(cleanJson));
 
-    } else if (type === "coaching") {
-      if (!logs || logs.length === 0) {
-        return res.status(200).json({ report: "아직 분석할 데이터가 충분하지 않습니다. 평소처럼 식사와 혈당 기록을 남겨주시면 정밀한 분석 리포트를 드릴 수 있어요! ✨" });
-      }
-
-      const prompt = `
-        You are a specialized Lifestyle & Wellness Coach for Type 1 Diabetics. 
-        Analyze the recent logs and provide a professional, encouraging coaching report.
-        Recent Logs: ${JSON.stringify(logs)}
-        Past Coaching Summaries: ${history?.join("\n") || "None"}
-        Language: Korean. Return a clean, structured text.
-      `;
-
-      const result = await model.generateContent(prompt);
-      return res.status(200).json({ report: result.response.text() });
-
-    } else if (type === "vision") {
-      const { image, mode, userContext } = req.body;
-      if (!image) return res.status(400).json({ error: "Image is required" });
-
-      const prompt = mode === 'food' 
-        ? `
-          You are an AI nutritionist for Type 1 Diabetics. 
-          Analyze the provided food image and user context.
-          User Context: "${userContext || "None"}"
-          
-          Identify all main ingredients/dishes and estimate their carbohydrate content.
-          Format the result as a JSON object:
-          {
-            "items": [
-              {
-                "id": "unique_id_string",
-                "name": "음식 이름 (한글)",
-                "amount": number (양),
-                "unit": "단위 (g, 인분, 개 등)",
-                "carbs": number (추정 탄수화물 g),
-                "icon": "Emoji"
-              }
-            ],
-            "advice": "당뇨인을 위한 짧고 친절한 식사 조언 (한글, 1~2문장)"
-          }
-          Return ONLY the JSON.
-        `
-        : `
-          Extract nutrition information from this food label.
-          User Context: "${userContext || "None"}"
-          
-          Focus on finding total carbohydrates, sugars, and serving size.
-          Format the result as a JSON object:
-          {
-            "productName": "제품명 (인식 불가시 가공식품)",
-            "totalCarbs": number (총 탄수화물 g),
-            "sugars": number (당류 g),
-            "servingSize": number (1회 제공량 숫자),
-            "servingUnit": "단위 (g, ml, 개 등)",
-            "advice": "이 제품 섭취 시 주의사항 (당류 함량 위주 조언, 한글, 1~2문장)"
-          }
-          Return ONLY the JSON.
-        `;
-
-      const imageParts = [{ inlineData: { data: image.split(",")[1], mimeType: "image/jpeg" } }];
-      const result = await model.generateContent([prompt, ...imageParts]);
-      const text = result.response.text();
+    } else if (type === "insights" || type === "coaching") {
+      // 텍스트 기반 요청 처리 (SDK 대신 직접 호출)
+      const prompt = type === "insights" ? `Analyze these logs for a diabetic: ${JSON.stringify(logs)}. Return 4 insights in JSON array.` : `Provide coaching: ${JSON.stringify(logs)}. Korean.`;
       
-      // 더 강력한 JSON 추출 로직 (백틱이나 앞뒤 텍스트 제거)
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const cleanJson = jsonMatch ? jsonMatch[0] : text.replace(/```json|```/g, "").trim();
-      
-      try {
-        const parsed = JSON.parse(cleanJson);
-        return res.status(200).json(parsed);
-      } catch (e) {
-        console.error("JSON Parse Error. Raw Text:", text);
-        return res.status(500).json({ 
-          error: "AI 응답 형식이 올바르지 않습니다.",
-          raw: text.substring(0, 100) // 디버깅용
-        });
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      const text = data.candidates[0].content.parts[0].text;
+
+      if (type === "insights") {
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        return res.status(200).json(JSON.parse(jsonMatch ? jsonMatch[0] : text));
       }
+      return res.status(200).json({ report: text });
 
     } else {
-      return res.status(400).json({ error: "Invalid type requested" });
+      return res.status(400).json({ error: "Invalid type" });
     }
 
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    if (error?.message?.includes("SAFETY")) {
-      return res.status(403).json({ error: "보안 정책 혹은 안전 필터로 인해 리포트를 생성할 수 없습니다." });
-    }
-    return res.status(500).json({ error: "Failed to generate content from AI model" });
+    console.error("Full Backend Error:", error);
+    const keyPrefix = apiKey.substring(0, 4);
+    return res.status(500).json({ error: `[Key:${keyPrefix}] ${error.message}` });
   }
 }

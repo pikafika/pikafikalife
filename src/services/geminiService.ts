@@ -70,12 +70,20 @@ export class GeminiService {
       });
 
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || `Server Error: ${response.statusText}`);
+        let errorMessage = `Server Error: ${response.status}`;
+        try {
+          const err = await response.json();
+          errorMessage = err.error || errorMessage;
+        } catch (e) {
+          // JSON이 아닌 경우 텍스트로 읽기 시도
+          const text = await response.text().catch(() => "");
+          if (text) errorMessage += ` - ${text.substring(0, 100)}`;
+        }
+        throw new Error(errorMessage);
       }
 
       return await response.json();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gemini Vision Error:", error);
       throw error;
     }
