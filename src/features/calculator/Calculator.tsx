@@ -135,67 +135,67 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-50/80 backdrop-blur-xl flex flex-col overflow-hidden shadow-2xl h-[100dvh] w-full max-w-[500px] mx-auto border-x border-white/20">
-      {/* 헤더 / 상단 단계 표시 */}
-    <div className="px-6 pt-8 pb-5 glass-morphism z-50 flex flex-col shrink-0 border-b border-gray-100/50 relative">
-        <div className="flex items-center justify-between mb-8">
+      {/* 헤더 / 상단 단계 표시 - 높이 축소 */}
+    <div className="px-4 pt-4 pb-3 glass-morphism z-50 flex flex-col shrink-0 border-b border-gray-100/50 relative">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">
-            <h1 className="text-[20px] font-black text-text-main tracking-tight flex items-center gap-2.5">
-              <span className="w-1.5 h-6 bg-brand-500 rounded-full shadow-lg shadow-brand-500/30"></span>
+            <h1 className="text-[18px] font-black text-text-main tracking-tight flex items-center gap-2">
+              <span className="w-1 h-5 bg-brand-500 rounded-full shadow-lg shadow-brand-500/30"></span>
               {steps.find(s => s.id === step)?.title}
             </h1>
-            <span className="text-[11px] font-black text-brand-500/60 mt-1 uppercase tracking-widest">Insulin Intelligent Core</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-100/50 p-2 rounded-2xl px-4 border border-white/40">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-slate-100/50 p-1.5 rounded-xl px-3 border border-white/40">
               {steps.map((s) => (
                 <div
                   key={s.id}
                   className={twMerge(
-                    "h-2 rounded-full transition-all duration-700",
-                    step === s.id ? "bg-brand-500 w-6 shadow-md shadow-brand-500/20" : (step > s.id ? "bg-brand-200 w-2" : "bg-gray-200 w-2")
+                    "h-1.5 rounded-full transition-all duration-700",
+                    step === s.id ? "bg-brand-500 w-4 shadow-md shadow-brand-500/20" : (step > s.id ? "bg-brand-200 w-1.5" : "bg-gray-200 w-1.5")
                   )}
                 />
               ))}
             </div>
             <button 
               onClick={onClose}
-              className="p-3 text-text-main bg-white border border-gray-100 rounded-2xl active:scale-90 transition-all shadow-sm"
+              className="p-2 text-text-main bg-white border border-gray-100 rounded-xl active:scale-90 transition-all shadow-sm"
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={22} strokeWidth={2.5} />
+              <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* 단계별 UI - 스크롤 가능 영역 */}
-      <div className="flex-1 overflow-y-auto px-6 pb-40 relative">
+      {/* 단계별 UI - 메인 영역 */}
+      <div className="flex-1 px-4 pb-[92px] relative overflow-hidden">
         {step === 1 && (
-          <div className="flex-1 flex flex-col transition-all duration-500">
-            <div className="text-center mb-8 mt-6 bg-white py-12 rounded-lg border border-gray-100 shadow-lds relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-full -mr-16 -mt-16 opacity-30 blur-2xl"></div>
-              <label className="text-text-sub font-bold mb-4 block text-[14px]">현재 혈당 수치</label>
+          <div className="h-full flex flex-col transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+            {/* 혈당 수치 카드 - 상단 여백 12px(mt-3), 남은 높이 전체 채우기(flex-1) */}
+            <div className="flex-1 flex flex-col justify-center text-center bg-white mt-3 rounded-xl border border-gray-100 shadow-premium relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-brand-50 rounded-full -mr-12 -mt-12 opacity-30 blur-2xl"></div>
+              <label className="text-text-sub font-black mb-1 block text-[12px] uppercase tracking-wider opacity-60">현재 혈당 수치</label>
               <div className="flex items-baseline justify-center gap-2">
-                <div className="text-[64px] font-bold text-brand-500 tracking-tighter leading-none min-w-[100px]">
+                <div className="text-[60px] font-black text-brand-500 tracking-tighter leading-none">
                   {bgInput || <span className="text-gray-100">0</span>}
                 </div>
-                <span className="text-[18px] font-bold text-text-muted">mg/dL</span>
+                <span className="text-[18px] font-black text-text-muted">mg/dL</span>
               </div>
             </div>
 
-            {/* 숫자 키패드 */}
-            <div className="grid grid-cols-3 gap-4 flex-1 max-h-[450px]">
+            {/* 숫자 키패드 - 간격 8px(gap-2), 고정 높이, 하단 12px 여백 */}
+            <div className="grid grid-cols-3 gap-2 w-full mt-4 mb-3 shrink-0">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'delete'].map((key, i) => (
                 <button
                   key={i}
                   disabled={key === ''}
                   onClick={() => handleKeypadClick(key)}
                   className={twMerge(
-                    "h-[72px] rounded-3xl text-2xl font-black transition-all active:scale-95 border",
-                    key === '' ? "invisible" : "bg-white text-text-main border-slate-100 shadow-premium hover:border-brand-200",
+                    "w-full h-[64px] flex items-center justify-center rounded-lg text-2xl font-black transition-all active:scale-95 border",
+                    key === '' ? "invisible" : "bg-white text-text-main border-slate-100 shadow-sm hover:border-brand-200",
                     key === 'delete' ? "text-brand-500 bg-brand-50 border-brand-100 shadow-brand-500/5" : ""
                   )}
                 >
-                  {key === 'delete' ? '←' : key}
+                  {key === 'delete' ? <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={3} /> : key}
                 </button>
               ))}
             </div>
@@ -203,11 +203,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
         )}
 
         {step === 2 && (
-          <div className="transition-all duration-500 -mx-6">
-            <div className="px-6 mb-8 pt-4">
-              <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-8 rounded-[40px] shadow-xl shadow-brand-500/30 flex justify-between items-center text-white relative overflow-hidden group">
+          <div className="h-full flex flex-col transition-all duration-500 animate-in fade-in -mx-4">
+            <div className="px-4 mb-6 pt-4 shrink-0">
+              <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-8 rounded-[36px] shadow-xl shadow-brand-500/30 flex justify-between items-center text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform duration-1000"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
                 
                 <div className="relative z-10">
                   <div className="text-[11px] font-black opacity-70 mb-1.5 tracking-widest uppercase">Current BG</div>
@@ -223,17 +222,20 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
               </div>
             </div>
             
-            <FoodSearch 
-              selectedFoods={selectedFoods} 
-              onFoodsChange={setSelectedFoods} 
-              onOpenAI={() => setShowAI(true)}
-              onOpenManual={() => setShowManual(true)}
-            />
+            {/* 탄수화물 리스트는 항상 스크롤 허용 */}
+            <div className="flex-1 overflow-y-auto px-4 no-scrollbar pb-6">
+              <FoodSearch 
+                selectedFoods={selectedFoods} 
+                onFoodsChange={setSelectedFoods} 
+                onOpenAI={() => setShowAI(true)}
+                onOpenManual={() => setShowManual(true)}
+              />
+            </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="flex-1 flex flex-col transition-all duration-500">
+          <div className="flex-1 flex flex-col transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
             <div className="bg-white rounded-[40px] p-10 shadow-premium border border-gray-100 mb-8 flex flex-col items-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 to-soft-blue"></div>
               <div className="text-text-sub font-black text-[15px] mb-6 tracking-tight">권장 인슐린 투여량</div>
@@ -283,7 +285,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-4 pb-20">
               <div className="flex items-center gap-2 px-1">
                 <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} className="text-brand-500" />
                 <span className="text-text-sub font-black text-[14px]">참고 메모</span>
@@ -372,13 +374,13 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
 
       {step < 4 && (
         <div 
-          className="absolute bottom-0 left-0 right-0 px-6 pb-10 pt-6 bg-gradient-to-t from-white via-white to-transparent z-50"
+          className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-gradient-to-t from-white via-white to-transparent z-50"
         >
           <div className="flex gap-3">
             {step > 1 && (
               <button
                 onClick={handleBack}
-                className="flex-1 lds-button-secondary py-4.5 flex items-center justify-center gap-2"
+                className="flex-1 lds-button-secondary py-3.5 flex items-center justify-center gap-2"
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={2.5} />
                 이전
@@ -389,7 +391,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
                 onClick={handleNext}
                 disabled={step === 1 && !bgInput}
                 className={twMerge(
-                  "flex-[2.5] lds-button-primary py-4.5 flex items-center justify-center gap-2",
+                  "flex-[2.5] lds-button-primary py-3.5 flex items-center justify-center gap-2",
                   step === 1 && !bgInput ? "bg-gray-200 shadow-none cursor-not-allowed" : ""
                 )}
               >
@@ -399,7 +401,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
             ) : (
               <button
                 onClick={handleSave}
-                className="flex-[2.5] lds-button-primary py-4.5 flex items-center justify-center gap-2"
+                className="flex-[2.5] lds-button-primary py-3.5 flex items-center justify-center gap-2"
               >
                 <HugeiconsIcon icon={FloppyDiskIcon} size={18} strokeWidth={2.5} />
                 기록 저장
