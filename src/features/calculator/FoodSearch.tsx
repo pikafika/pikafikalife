@@ -79,12 +79,12 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
 
   return (
     <>
-      {/* 검색 및 AI 버튼 섹션 - 상단 라운드 디자인 적용 */}
-      <div className="p-6 pb-4 space-y-4 bg-white rounded-t-[48px] shadow-[0_-20px_50px_rgba(0,0,0,0.03)] border-t border-slate-50 relative z-10">
+      {/* 검색 및 AI 버튼 섹션 - 레이어 통합을 위해 스타일 및 패딩 조정 */}
+      <div className="px-4 py-4 space-y-4 bg-white relative z-10">
         {/* AI 분석 버튼 (Premium UI) */}
         <button 
           onClick={onOpenAI}
-          className="w-full bg-gradient-to-r from-brand-50 via-soft-blue to-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm"
+          className="w-full bg-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-brand-500/20 shadow-lg">
@@ -131,13 +131,10 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
       </div>
 
       {/* 카테고리 필터 - Sticky 적용 */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-50 mb-6">
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-50 mb-6">
         <div className="relative group">
-          {/* 좌측 페이드 */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          
           <div className="flex overflow-x-auto py-4 no-scrollbar">
-            <div className="flex pl-10 pr-6 gap-2.5">
+            <div className="flex pl-4 pr-4 gap-2.5">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -155,13 +152,10 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
               ))}
             </div>
           </div>
-
-          {/* 우측 페이드 */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
         </div>
       </div>
 
-      <div className="px-6 pb-8">
+      <div className="px-4 pb-8">
         {/* 오늘의 레시피 조합 (선택된 음식) - 가로 슬라이드바 형식 */}
         {selectedFoods.length > 0 && (
           <div className="mb-10 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">

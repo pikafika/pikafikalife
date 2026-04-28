@@ -13,39 +13,30 @@ interface DailyInsightProps {
 }
 
 export const DailyInsight: React.FC<DailyInsightProps> = ({ onSelectStory, onSeeAll }) => {
-  const { insights, setInsights, isGenerating, setGenerating } = useAIStore();
-  const { logs } = useHistoryStore();
-  const { settings } = useUserStore();
+  const { insights, setInsights, isGenerating } = useAIStore();
 
-  // 최초 로드 시 데이터가 없으면 기본 데이터로 초기화하거나 AI 호출
+  // 매일 자정 기준으로 새로운 4개의 팁을 로테이션으로 보여줌
   useEffect(() => {
-    if (insights.length === 0) {
-      setInsights(INSIGHTS_DATA);
-    }
+    const today = new Date();
+    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    
+    // 날짜 시드를 기반으로 셔플하여 4개 선택
+    const shuffled = [...INSIGHTS_DATA].sort((a, b) => {
+      const hashA = (a.id * seed) % 100;
+      const hashB = (b.id * seed) % 100;
+      return hashA - hashB;
+    });
+    
+    setInsights(shuffled.slice(0, 4));
   }, []);
 
-  const handleRefresh = async () => {
-    const service = getGeminiService();
-    if (!service || isGenerating) return;
-
-    setGenerating(true);
-    try {
-      const newInsights = await service.generateDailyInsights(logs, settings);
-      setInsights(newInsights);
-    } catch (error) {
-      console.error("Failed to refresh insights:", error);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const displayInsights = Array.isArray(insights) && insights.length > 0 ? insights : INSIGHTS_DATA;
+  const displayInsights = Array.isArray(insights) && insights.length > 0 ? insights : INSIGHTS_DATA.slice(0, 4);
 
   return (
     <div className="flex flex-col mb-8">
       <div className="flex items-center justify-between mb-4 px-2">
         <div className="flex items-center gap-2">
-          <h3 className="text-[16px] font-bold text-text-main">오늘의 리포트</h3>
+          <h3 className="text-[16px] font-bold text-text-main">건강 인사이트 허브</h3>
           {isGenerating && (
             <div className="flex items-center gap-1 bg-brand-50 px-2 py-0.5 rounded-sm animate-pulse">
               <HugeiconsIcon icon={AiChat01Icon} size={10} className="text-brand-500" />
@@ -54,14 +45,7 @@ export const DailyInsight: React.FC<DailyInsightProps> = ({ onSelectStory, onSee
           )}
         </div>
         <div className="flex gap-2">
-          {!isGenerating && (
-            <button 
-              onClick={handleRefresh}
-              className="text-[12px] font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-sm active:bg-gray-200 transition-all"
-            >
-              새로고침
-            </button>
-          )}
+          {/* 새로고침(AI 호출) 버튼 제거됨 */}
           <button 
             onClick={onSeeAll}
             className="text-[12px] font-bold text-brand-500 border border-brand-100 px-3 py-1 rounded-sm active:bg-brand-50 transition-all"

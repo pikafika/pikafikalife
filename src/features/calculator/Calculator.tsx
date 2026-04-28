@@ -134,9 +134,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
   ];
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-50/80 backdrop-blur-xl flex flex-col overflow-hidden shadow-2xl h-[100dvh] w-full max-w-[500px] mx-auto border-x border-white/20">
+    <div className="fixed inset-0 z-[9999] bg-white flex flex-col overflow-hidden shadow-2xl h-[100dvh] w-full max-w-[500px] mx-auto border-x border-gray-100">
       {/* 헤더 / 상단 단계 표시 - 높이 축소 */}
-    <div className="px-4 pt-4 pb-3 glass-morphism z-50 flex flex-col shrink-0 border-b border-gray-100/50 relative">
+    <div className="px-4 pt-4 pb-3 bg-white z-50 flex flex-col shrink-0 border-b border-gray-100 relative">
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">
             <h1 className="text-[18px] font-black text-text-main tracking-tight flex items-center gap-2">
@@ -203,11 +203,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
         )}
 
         {step === 2 && (
-          <div className="h-full flex flex-col transition-all duration-500 animate-in fade-in -mx-4">
-            <div className="px-4 mb-6 pt-4 shrink-0">
-              <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-8 rounded-[36px] shadow-xl shadow-brand-500/30 flex justify-between items-center text-white relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform duration-1000"></div>
-                
+          <div className="h-full flex flex-col transition-all duration-500 animate-in fade-in -mx-4 overflow-y-auto no-scrollbar">
+            <div className="px-4 mb-2 pt-4 shrink-0">
+              <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-8 rounded-[36px] border border-brand-500/10 flex justify-between items-center text-white relative overflow-hidden group">
                 <div className="relative z-10">
                   <div className="text-[11px] font-black opacity-70 mb-1.5 tracking-widest uppercase">Current BG</div>
                   <div className="text-[28px] font-black">{currentBG} <span className="text-[13px] opacity-80">mg/dL</span></div>
@@ -222,15 +220,12 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
               </div>
             </div>
             
-            {/* 탄수화물 리스트는 항상 스크롤 허용 */}
-            <div className="flex-1 overflow-y-auto px-4 no-scrollbar pb-6">
-              <FoodSearch 
-                selectedFoods={selectedFoods} 
-                onFoodsChange={setSelectedFoods} 
-                onOpenAI={() => setShowAI(true)}
-                onOpenManual={() => setShowManual(true)}
-              />
-            </div>
+            <FoodSearch 
+              selectedFoods={selectedFoods} 
+              onFoodsChange={setSelectedFoods} 
+              onOpenAI={() => setShowAI(true)}
+              onOpenManual={() => setShowManual(true)}
+            />
           </div>
         )}
 
@@ -374,7 +369,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
 
       {step < 4 && (
         <div 
-          className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-gradient-to-t from-white via-white to-transparent z-50"
+          className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-4 bg-white border-t border-gray-100 z-50"
         >
           <div className="flex gap-3">
             {step > 1 && (

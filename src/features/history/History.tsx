@@ -67,22 +67,49 @@ export default function History() {
 
   return (
     <div className="flex flex-col space-y-8 pb-32 pt-2">
-      {Object.entries(groupedLogs).map(([date, dateLogs]) => (
-        <div key={date} className="space-y-4">
-          <div className="flex items-center gap-2 px-3">
-            <h3 className="text-[13px] font-bold text-text-muted">{date}</h3>
-          </div>
-          
-          <div className="space-y-3 px-2">
-            {dateLogs.map((log) => (
-              <div 
-                key={log.id} 
-                className={twMerge(
-                  "bg-white rounded-lg border border-gray-100 transition-all overflow-hidden",
-                  expandedId === log.id ? "shadow-lds border-brand-200" : "shadow-sm"
-                )}
-              >
-                {/* 요약 헤더 */}
+      {Object.entries(groupedLogs).map(([date, dateLogs]) => {
+        const dailyCarbs = dateLogs.reduce((sum, log) => sum + log.totalCarbs, 0);
+        const dailyInsulin = dateLogs.reduce((sum, log) => sum + log.totalInsulin, 0);
+        const avgBG = Math.round(dateLogs.reduce((sum, log) => sum + log.currentBG, 0) / dateLogs.length);
+
+        return (
+          <div key={date} className="space-y-6">
+            <div className="flex flex-col gap-3 px-2">
+              <h3 className="text-[14px] font-bold text-text-main flex items-center gap-2">
+                <HugeiconsIcon icon={Calendar01Icon} size={18} className="text-brand-500" strokeWidth={2.5} />
+                {date}
+              </h3>
+              
+              {/* 일간 요약 서머리 카드 */}
+              <div className="grid grid-cols-3 gap-2 bg-gray-50 rounded-lg p-4 border border-gray-100 shadow-sm">
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] font-bold text-text-sub uppercase tracking-wider mb-1">총 탄수화물</span>
+                  <span className="text-[16px] font-bold text-text-main">{dailyCarbs}<span className="text-[11px] font-medium text-text-muted ml-0.5">g</span></span>
+                </div>
+                <div className="flex flex-col items-center border-l border-r border-gray-200">
+                  <span className="text-[10px] font-bold text-text-sub uppercase tracking-wider mb-1">총 인슐린</span>
+                  <span className="text-[16px] font-bold text-text-main">{dailyInsulin.toFixed(1)}<span className="text-[11px] font-medium text-text-muted ml-0.5">u</span></span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] font-bold text-text-sub uppercase tracking-wider mb-1">평균 혈당</span>
+                  <span className="text-[16px] font-bold text-text-main">{avgBG || 0}<span className="text-[11px] font-medium text-text-muted ml-0.5">mg/dL</span></span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative border-l-2 border-gray-100 ml-6 space-y-5 pb-2">
+              {dateLogs.map((log) => (
+                <div key={log.id} className="relative pl-6 pr-2">
+                  {/* 타임라인 노드 (점) */}
+                  <div className="absolute top-6 -left-[9px] w-4 h-4 rounded-full border-4 border-white bg-brand-500 shadow-sm z-10" />
+                  
+                  <div 
+                    className={twMerge(
+                      "bg-white rounded-lg border border-gray-100 transition-all overflow-hidden relative group",
+                      expandedId === log.id ? "shadow-lds border-brand-200" : "shadow-sm hover:border-brand-100"
+                    )}
+                  >
+                    {/* 요약 헤더 */}
                 <div 
                   className={twMerge(
                     "p-5 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors",
@@ -228,10 +255,12 @@ export default function History() {
                   </div>
                 )}
               </div>
-            ))}
+            </div>
+          ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

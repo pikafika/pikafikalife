@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import TrendChart from './TrendChart';
 import { DailyInsight } from './DailyInsight';
@@ -14,87 +14,34 @@ import {
   ArrowRight01Icon,
   Cancel01Icon,
   ArrowDown01Icon,
-  ArrowUp01Icon
+  ArrowUp01Icon,
+  Alert01Icon
 } from '@hugeicons/core-free-icons';
-import { twMerge } from 'tailwind-merge';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useCloudSync } from '../../hooks/useCloudSync';
 import { SeedingCard } from '../../components/SeedingCard';
+import { twMerge } from 'tailwind-merge';
 import { isAdmin } from '../../utils/permissions';
+import { useCloudSync } from '../../hooks/useCloudSync';
 
 interface DashboardProps {
   onOpenAIReport: () => void;
   onOpenStory: (index: number) => void;
+  onOpenInsightHub: () => void;
   onOpenFamilyMgmt: () => void;
 }
 
-const BGStatusDetail: React.FC<{ bg: number; isOpen: boolean; onToggle: () => void }> = ({ bg, isOpen, onToggle }) => {
-  const getStatus = (bgValue: number) => {
-    if (bgValue < 70) return { 
-      label: '저혈당 주의가 필요해요', 
-      color: 'bg-warm-50 text-warm-600 border-warm-100',
-      reason: '혈당이 70mg/dL 미만으로 떨어졌습니다. 에너지가 부족하여 어지러움이나 식은땀을 유발할 수 있습니다.',
-      action: '즉시 단순당 15g을 섭취하고 15분 뒤 재측정하세요.'
-    };
-    if (bgValue > 180) return { 
-      label: '관리가 필요한 수치예요', 
-      color: 'bg-orange-50 text-orange-600 border-orange-100',
-      reason: '혈당이 목표 범위인 180mg/dL를 초과했습니다. 피로감을 느끼거나 장기적으로 혈관 건강에 영향을 줄 수 있습니다.',
-      action: '인슐린 교정 용량을 확인하고, 충분한 수분을 섭취해 보세요.'
-    };
-    return { 
-      label: '오늘도 잘하고 있어요!', 
-      color: 'bg-brand-50 text-brand-600 border-brand-100',
-      reason: '현재 혈당이 목표 범위 내에 안전하게 머물고 있습니다.',
-      action: '현재의 식단과 활동 리듬을 잘 유지해 주세요!'
-    };
-  };
-
-  const status = getStatus(bg);
-
-  return (
-    <div className="w-full flex flex-col items-center">
-      <button 
-        onClick={onToggle}
-        className={twMerge('px-4 py-1.5 rounded-full text-[12px] font-bold border flex items-center gap-2 transition-all active:scale-95', status.color)}
-      >
-        {status.label}
-        <HugeiconsIcon icon={isOpen ? ArrowUp01Icon : ArrowDown01Icon} size={12} strokeWidth={3} />
-      </button>
-      
-      {isOpen && (
-        <div className="mt-4 w-full bg-gray-50 rounded-md p-5 text-left border border-gray-100 animate-in slide-in-from-top-2 duration-300">
-          <div className="mb-3">
-            <h5 className="text-[11px] font-bold text-text-main mb-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
-              상태 설명
-            </h5>
-            <p className="text-[13px] font-medium text-text-sub leading-relaxed">
-              {status.reason}
-            </p>
-          </div>
-          <div className="pt-3 border-t border-white">
-            <h5 className="text-[11px] font-bold text-brand-600 mb-1 flex items-center gap-1.5">
-              💡 추천 조치
-            </h5>
-            <p className="text-[13px] font-medium text-text-muted leading-relaxed">
-              {status.action}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const Dashboard: React.FC<DashboardProps> = ({ onOpenAIReport, onOpenStory, onOpenFamilyMgmt }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+  onOpenAIReport, 
+  onOpenStory, 
+  onOpenInsightHub,
+  onOpenFamilyMgmt 
+}) => {
   useCloudSync(); // 로그인 시 데이터 동기화 시작
   
   const { logs } = useHistoryStore();
   const { insights } = useAIStore();
-  const { user, login, logout } = useAuthStore();
+  const { user } = useAuthStore();
   
-  const [isSeeAllOpen, setIsSeeAllOpen] = useState(false);
   const [isBGExplanationOpen, setIsBGExplanationOpen] = useState(false);
 
   const { todayLogs, stats, lastBG, streakCount } = useMemo(() => {
@@ -148,29 +95,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenAIReport, onOpenStory, onOp
               {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
             </span>
           </div>
-          
-          {user ? (
-            <button 
-              onClick={logout}
-              className="relative group"
-            >
-              <img 
-                src={user.photoURL || ''} 
-                alt="Profile" 
-                className="w-12 h-12 rounded-xl border border-gray-100 shadow-sm transition-all"
-              />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-500 rounded-full border-2 border-white flex items-center justify-center">
-                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={10} color="white" strokeWidth={3} />
-              </div>
-            </button>
-          ) : (
-            <button 
-              onClick={login}
-              className="bg-brand-500 text-white px-4 py-2.5 rounded-sm font-bold text-[13px] shadow-sm active:bg-brand-600 transition-all flex items-center gap-2"
-            >
-              로그인
-            </button>
-          )}
         </div>
 
         {/* 가족 공유 안내 */}
@@ -214,7 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenAIReport, onOpenStory, onOp
       </section>
 
       {/* 데일리 인사이트 (스토리 스타일) */}
-      <DailyInsight onSelectStory={onOpenStory} onSeeAll={() => setIsSeeAllOpen(true)} />
+      <DailyInsight onSelectStory={onOpenStory} onSeeAll={onOpenInsightHub} />
 
       {/* AI 데이터 리포트 스타일 코칭 */}
       <section className="px-2">
@@ -329,49 +253,39 @@ const Dashboard: React.FC<DashboardProps> = ({ onOpenAIReport, onOpenStory, onOp
 
       {/* 테스트용 데이터 생성 카드 */}
       {isAdmin(user) && <SeedingCard />}
+    </div>
+  );
+};
 
-      {/* Insight Hub */}
-      {isSeeAllOpen && (
-        <div className="fixed inset-0 z-[120] bg-white flex flex-col animate-in slide-in-from-bottom duration-500">
-          <header className="p-6 pt-10 flex items-center justify-between border-b border-gray-100 bg-white sticky top-0">
-            <h3 className="text-[18px] font-bold text-text-main">건강 인사이트 허브</h3>
-            <button onClick={() => setIsSeeAllOpen(false)} className="p-2 border border-gray-100 rounded-md">
-              <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2.5} />
-            </button>
-          </header>
-          <div className="flex-1 overflow-y-auto p-6 space-y-3">
-            <p className="text-[13px] font-bold text-text-muted mb-4">
-              총 {insights.length}개의 전문 지식
-            </p>
-            {insights.map((insight, index) => (
-              <button 
-                key={`${insight.id}-${index}`}
-                onClick={() => {
-                  setIsSeeAllOpen(false);
-                  onOpenStory(index);
-                }}
-                className="w-full flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm active:bg-gray-50 transition-all group"
-              >
-                <div className={twMerge("w-12 h-12 rounded-md flex items-center justify-center text-[22px] shrink-0", insight.color)}>
-                  {typeof insight.icon === 'string' ? insight.icon : insight.icon}
-                </div>
-                <div className="text-left flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-brand-500 uppercase tracking-wider">{insight.title}</span>
-                  <h4 className="text-[15px] font-bold text-text-main truncate">
-                    {insight.label}
-                  </h4>
-                  <p className="text-[12px] font-medium text-text-muted mt-0.5 truncate">
-                    {insight.content.description}
-                  </p>
-                </div>
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-gray-300" strokeWidth={3} />
-              </button>
-            ))}
-          </div>
+// --- Sub Components ---
+
+const BGStatusDetail: React.FC<{ bg: number; isOpen: boolean; onToggle: () => void }> = ({ bg, isOpen, onToggle }) => {
+  const status = useMemo(() => {
+    if (bg < 70) return { label: '저혈당', color: 'text-warm-500', bg: 'bg-warm-50', icon: Alert01Icon, desc: '혈당이 너무 낮습니다. 즉시 15g의 단순당(주스, 사탕 등)을 섭취하고 15분 뒤 재측정하세요.' };
+    if (bg <= 140) return { label: '정상 혈당', color: 'text-brand-500', bg: 'bg-brand-50', icon: CheckmarkBadge01Icon, desc: '정상 범위 내의 안정적인 혈당입니다. 아주 훌륭한 관리 상태입니다!' };
+    if (bg <= 180) return { label: '약간 높음', color: 'text-orange-500', bg: 'bg-orange-50', icon: InformationCircleIcon, desc: '혈당이 다소 높은 편입니다. 추가 간식 섭취를 자제하고 가벼운 활동을 추천합니다.' };
+    return { label: '고혈당', color: 'text-red-500', bg: 'bg-red-50', icon: ArrowUp01Icon, desc: '고혈당 상태입니다. 충분한 수분을 섭취하고, 필요 시 교정 인슐린 투여를 고려하세요.' };
+  }, [bg]);
+
+  return (
+    <div className="w-full mt-2">
+      <button 
+        onClick={onToggle}
+        className={twMerge("w-full flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all", status.bg, isOpen ? "border-current/20 shadow-sm" : "border-transparent")}
+      >
+        <div className="flex items-center gap-2">
+          <HugeiconsIcon icon={status.icon} size={16} className={status.color} />
+          <span className={twMerge("text-[13px] font-bold", status.color)}>{status.label}</span>
+        </div>
+        <HugeiconsIcon icon={isOpen ? ArrowUp01Icon : ArrowDown01Icon} size={14} className="text-gray-400" />
+      </button>
+      {isOpen && (
+        <div className="mt-2 p-4 bg-white border border-gray-100 rounded-xl animate-in slide-in-from-top-2 duration-300">
+          <p className="text-[12px] font-medium text-text-sub leading-relaxed text-left">
+            {status.desc}
+          </p>
         </div>
       )}
-
-      {/* 로컬 오버레이 렌더링 제거 (App.tsx로 이동함) */}
     </div>
   );
 };

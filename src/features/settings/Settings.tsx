@@ -24,7 +24,7 @@ import { isAdmin } from '../../utils/permissions';
 import { SeedingCard } from '../../components/SeedingCard';
 
 export default function Settings() {
-  const { user } = useAuthStore();
+  const { user, login, logout } = useAuthStore();
   const { settings, updateSettings } = useUserStore();
   const [formData, setFormData] = useState({
     icr: settings.icr,
@@ -93,6 +93,38 @@ export default function Settings() {
         <p className="text-[13px] text-text-muted mt-2 font-medium">
           더 정확한 인슐린 계산을 위해 개인 설정값을 유지해 주세요.
         </p>
+      </section>
+
+      {/* 계정 정보 그룹 */}
+      <section className="bg-white rounded-lg shadow-lds border border-gray-100 mx-2 overflow-hidden mb-2">
+        <div className="p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <img src={user.photoURL || ''} alt="Profile" className="w-12 h-12 rounded-full border border-gray-100 shadow-sm" />
+                <div>
+                  <h4 className="text-[15px] font-bold text-text-main">{user.displayName}</h4>
+                  <p className="text-[12px] font-medium text-text-sub">{user.email}</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[20px]">
+                  👤
+                </div>
+                <div className="flex flex-col">
+                  <h4 className="text-[15px] font-bold text-text-main">로그인이 필요합니다</h4>
+                  <p className="text-[12px] font-medium text-text-sub">데이터 백업을 위해 로그인해주세요.</p>
+                </div>
+              </>
+            )}
+          </div>
+          {user ? (
+            <button onClick={logout} className="px-3 py-1.5 text-[12px] font-bold text-gray-500 bg-gray-100 rounded-sm hover:bg-gray-200 transition-all">로그아웃</button>
+          ) : (
+            <button onClick={login} className="px-4 py-2 bg-brand-500 text-white rounded-sm font-bold text-[12px] shadow-sm hover:bg-brand-600 transition-all">로그인</button>
+          )}
+        </div>
       </section>
 
       {/* 개인 설정 그룹 */}
