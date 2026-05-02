@@ -37,19 +37,13 @@ export class SyncService {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && userDoc.data().familyId) {
-        if (import.meta.env.DEV) {
-          console.log("Existing family found:", userDoc.data().familyId);
-        }
-        return userDoc.data().familyId;
+          return userDoc.data().familyId;
       }
 
-      // 새 가족 그룹 생성 (최초 1회)
       const familyId = `fam_${uid}`;
-      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-      if (import.meta.env.DEV) {
-        console.log("Creating new family group for user:", uid, "with code:", inviteCode);
-      }
+      const array = new Uint8Array(4);
+      crypto.getRandomValues(array);
+      const inviteCode = Array.from(array, (b) => b.toString(36)).join('').substring(0, 6).toUpperCase();
 
       await setDoc(userDocRef, { uid, displayName, familyId }, { merge: true });
       await setDoc(doc(db, "families", familyId), {
@@ -60,10 +54,8 @@ export class SyncService {
         createdAt: Date.now()
       });
 
-      console.log("✅ Family group created successfully:", familyId);
       return familyId;
-    } catch (e) {
-      console.error("❌ Family creation error:", e);
+    } catch {
       return null;
     }
   }
@@ -71,9 +63,9 @@ export class SyncService {
   /**
    * 초대 코드로 가족 그룹 가입
    */
-  static async joinFamilyByCode(uid: string, inviteCode: string) {
+  static async joinFamilyByCode(_uid: string, _inviteCode: string) {
+    // TODO: 초대 코드로 가족 그룹 가입 기능 미구현
     if (!db) return;
-    // ... (상세 구현 생략 또는 구현되어 있던 로직)
   }
 
   /**
@@ -93,8 +85,24 @@ export class SyncService {
       });
       onUpdate(logs);
     }, (error) => {
-      console.error("Logs sync error:", error);
+      // 에러를 기록하여 디버깅 가능하게 함 (권한 오류, 네트워크 오류 등)
+      console.error('[Sync] subscribeLogs 에러:', error.code, error.message);
+      LogService.addLog({
+        type: 'error',
+        message: error.code || error.message,
+        details: `실시간 로그 구독 오류 (familyId: ${familyId})`
+      });
     });
+  }
+
+  /**
+   * 실시간 로그 구독 해제 — useEffect cleanup에서 호출
+   */
+  static unsubscribeLogs() {
+    if (this.logsUnsubscribe) {
+      this.logsUnsubscribe();
+      this.logsUnsubscribe = null;
+    }
   }
 
   /**
@@ -162,7 +170,7 @@ export class SyncService {
           if (newFamilyId) currentFamilyId = newFamilyId;
         }
       } catch (e: any) {
-        console.warn("오프라인 상태이거나 가족 확인 실패. 계속 진행합니다.");
+        if (import.meta.env.DEV) console.warn("오프라인 상태이거나 가족 확인 실패. 계속 진행합니다.");
         await LogService.addLog({
           type: 'info',
           message: '오프라인 모드로 데이터 생성을 계속합니다.',
@@ -242,7 +250,7 @@ export class SyncService {
         });
       } catch (err: any) {
         if (err.message === "COMMIT_TIMEOUT") {
-          console.warn("Commit timeout occurred. Operations will continue in the background.");
+          if (import.meta.env.DEV) console.warn("Commit timeout — operations continuing in background.");
           await LogService.addLog({
             type: 'info',
             message: '데이터가 백그라운드에서 동기화 중입니다.',
@@ -253,12 +261,12 @@ export class SyncService {
           throw err;
         }
       }
-    } catch (e: any) {
-      console.error("Seeding Error:", e);
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
       await LogService.addLog({
         type: 'error',
-        message: e.code || e.message || 'unknown',
-        details: `데이터 생성 중 오류 발생: ${e.message}`
+        message: err.code || err.message || 'unknown',
+        details: `데이터 생성 중 오류 발생: ${err.message ?? ''}`
       });
       throw e;
     }

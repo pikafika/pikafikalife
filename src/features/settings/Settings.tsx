@@ -39,7 +39,24 @@ export default function Settings() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const SAFE_RANGES = {
+    icr:      { min: 1,  max: 100,  label: 'ICR(탄수화물 계수)',     unit: 'g/u' },
+    isf:      { min: 1,  max: 500,  label: 'ISF(인슐린 민감도)',      unit: 'mg/dL' },
+    targetBG: { min: 60, max: 200,  label: '목표 혈당',              unit: 'mg/dL' },
+    dia:      { min: 1,  max: 8,    label: '인슐린 활성 시간(DIA)',   unit: '시간' },
+  } as const;
+
   const handleSave = () => {
+    for (const [key, range] of Object.entries(SAFE_RANGES)) {
+      const val = formData[key as keyof typeof formData];
+      if (val < range.min || val > range.max) {
+        setStatus({
+          type: 'error',
+          message: `${range.label}은(는) ${range.min}~${range.max}${range.unit} 범위여야 합니다.`,
+        });
+        return;
+      }
+    }
     updateSettings(formData);
     setStatus({ type: 'success', message: '설정이 저장되었습니다.' });
     setTimeout(() => setStatus({ type: null, message: '' }), 3000);

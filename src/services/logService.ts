@@ -60,11 +60,12 @@ export class LogService {
       console.error('Failed to send log to server:', err);
     });
     
-    // 콘솔 로깅 (개발자용)
-    if (log.type === 'error') {
-      console.error(`[ActivityLog] ${log.message}`, log.details);
-    } else {
-      console.log(`[ActivityLog] ${log.message}`);
+    if (import.meta.env.DEV) {
+      if (log.type === 'error') {
+        console.error(`[ActivityLog] ${log.message}`, log.details);
+      } else {
+        console.log(`[ActivityLog] ${log.message}`);
+      }
     }
     
     return newLog;

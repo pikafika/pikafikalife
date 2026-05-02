@@ -50,7 +50,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
   const [showManual, setShowManual] = useState(false);
 
   const { addLog, logs } = useHistoryStore();
-  const { setInsights, setGenerating } = useAIStore();
+  const { setInsights, setGenerating, isGenerating, insights } = useAIStore();
   const { settings } = useUserStore();
   const { user } = useAuthStore();
 
@@ -323,14 +323,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
                 <h4 className="font-bold text-[14px] text-brand-600">AI 코어 브리핑</h4>
               </div>
               
-              {useAIStore.getState().isGenerating ? (
+              {isGenerating ? (
                 <div className="space-y-3">
                   <div className="h-4 bg-gray-200 rounded-full w-3/4 animate-pulse"></div>
                   <div className="h-4 bg-gray-200 rounded-full w-full animate-pulse"></div>
                 </div>
               ) : (
                 <p className="text-[13px] font-medium text-text-main leading-relaxed">
-                  {useAIStore.getState().insights[0]?.content.description || "데이터를 분석하여 더 나은 관리를 도와드릴게요."}
+                  {insights[0]?.content.description || "데이터를 분석하여 더 나은 관리를 도와드릴게요."}
                 </p>
               )}
             </div>
@@ -384,10 +384,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
             {step < 3 ? (
               <button
                 onClick={handleNext}
-                disabled={step === 1 && !bgInput}
+                disabled={step === 1 && (parseInt(bgInput) || 0) < 40}
                 className={twMerge(
                   "flex-[2.5] lds-button-primary py-3.5 flex items-center justify-center gap-2",
-                  step === 1 && !bgInput ? "bg-gray-200 shadow-none cursor-not-allowed" : ""
+                  step === 1 && (parseInt(bgInput) || 0) < 40 ? "bg-gray-200 shadow-none cursor-not-allowed" : ""
                 )}
               >
                 {step === 2 ? '결과 확인' : '다음'}

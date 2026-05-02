@@ -12,8 +12,10 @@ service cloud.firestore {
       // 문서의 members 맵/배열 안에 요청자의 uid가 존재하는지 확인
       allow read, write: if request.auth != null && request.auth.uid in resource.data.members;
       
-      // 가족 그룹 생성을 위한 예외 처리 (생성 시점에는 규칙이 다르게 적용될 수 있음)
-      allow create: if request.auth != null;
+      // 본인의 uid를 기반으로 한 familyId(fam_{uid})만 생성 가능, ownerId도 본인이어야 함
+      allow create: if request.auth != null
+        && familyId == ('fam_' + request.auth.uid)
+        && request.resource.data.ownerId == request.auth.uid;
       
       // 3. 가족 그룹 내부의 logs(혈당 등 기록) 서브컬렉션 규칙
       match /logs/{logId} {

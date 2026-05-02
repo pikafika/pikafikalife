@@ -1,10 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const geminiApiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY
+
+  return {
   plugins: [
     react(),
     {
@@ -38,48 +42,70 @@ export default defineConfig({
             let body = '';
             req.on('data', chunk => { body += chunk.toString(); });
             req.on('end', async () => {
+              const send = (status: number, data: unknown) => {
+                res.statusCode = status;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(data));
+              };
               try {
-                const { type, logs, settings, history, image, mode, userContext } = JSON.parse(body);
-                const apiKey = process.env.VITE_GEMINI_API_KEY;
-                
-                if (!apiKey) {
-                  res.statusCode = 500;
-                  return res.end(JSON.stringify({ error: "API Key is missing in .env" }));
-                }
+                const { type, logs, image, mode, userContext } = JSON.parse(body);
+                const apiKey = geminiApiKey;
+                if (!apiKey) return send(500, { error: "API Key is missing in .env" });
 
-                // Node환경에서 fetch를 사용하거나 직접 SDK 호출
-                // 여기서는 프론트에서 사용하는 것과 동일하게 동작하도록 응답
-                // 실제 API 호출은 백엔드 로직(api/gemini.ts)과 동일하게 수행
-                const { GoogleGenerativeAI } = await import("@google/generative-ai");
-                const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const MODEL = "gemini-2.5-flash";
+                const BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${apiKey}`;
 
                 if (type === "vision") {
-                  const prompt = mode === 'food' 
-                    ? `Analyze this food image. JSON: { items: [{id, name, amount, unit, carbs, icon}], advice }. Korean.`
-                    : `Extract nutrition facts (carbs, sugars, serving) from this label. JSON: { productName, totalCarbs, sugars, servingSize, servingUnit, advice }. Korean.`;
+                  const prompt = mode === 'food'
+                    ? `당신은 1형 당뇨인을 위한 영양사입니다. 사진 속 음식을 분석하여 각 재료명, 양(숫자), 단위(g,인분 등), 탄수화물(g)을 JSON으로 반환하세요. JSON 형식: { "items": [{ "id", "name", "amount", "unit", "carbs", "icon" }], "advice" }. 한글로 답변하세요.`
+                    : `영양성분표 라벨에서 제품명, 총 탄수화물(g), 당류(g), 1회 제공량 및 단위를 추출하세요. JSON 형식: { "productName", "totalCarbs", "sugars", "servingSize", "servingUnit", "advice" }. 한글로 답변하세요.`;
 
-                  const imageParts = [{ inlineData: { data: image.split(",")[1], mimeType: "image/jpeg" } }];
-                  const result = await model.generateContent([prompt, ...imageParts]);
-                  const text = result.response.text();
-                  const cleanJson = text.replace(/```json|```/g, "").trim();
-                  res.statusCode = 200;
-                  res.end(cleanJson);
+                  if (!image || typeof image !== 'string') return send(400, { error: "이미지 데이터가 올바르지 않습니다." });
+                  const base64Data = image.includes(',') ? image.split(",")[1] : image;
+
+                  const resp = await fetch(BASE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }]
+                    })
+                  });
+                  const data = await resp.json();
+                  if (!resp.ok) throw new Error("AI 서비스에 일시적인 오류가 발생했습니다.");
+                  const text = data.candidates[0].content.parts[0].text;
+                  const match = text.match(/\{[\s\S]*\}/);
+                  return send(200, JSON.parse(match ? match[0] : text.trim()));
+
                 } else if (type === "insights") {
-                  const prompt = `You are a coach for Type 1 Diabetics. Provide 4 insights based on logs: ${JSON.stringify(logs?.slice(0,10))}. Return JSON array. Korean.`;
-                  const result = await model.generateContent(prompt);
-                  const text = result.response.text();
-                  const cleanJson = text.replace(/```json|```/g, "").trim();
-                  res.statusCode = 200;
-                  res.end(cleanJson);
+                  const prompt = `Analyze these logs for a Type 1 diabetic and provide 4 personalized health insights in Korean. Return JSON array: ${JSON.stringify((logs || []).slice(0, 10))}`;
+                  const resp = await fetch(BASE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                  });
+                  const data = await resp.json();
+                  if (!resp.ok) throw new Error("AI 서비스에 일시적인 오류가 발생했습니다.");
+                  const text = data.candidates[0].content.parts[0].text;
+                  const match = text.match(/\[[\s\S]*\]/);
+                  return send(200, JSON.parse(match ? match[0] : text.trim()));
+
+                } else if (type === "coaching") {
+                  const prompt = `1형 당뇨 관리 코치로서 다음 기록을 분석하고 한국어로 상세 코칭 리포트를 작성하세요: ${JSON.stringify((logs || []).slice(0, 20))}`;
+                  const resp = await fetch(BASE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                  });
+                  const data = await resp.json();
+                  if (!resp.ok) throw new Error("AI 서비스에 일시적인 오류가 발생했습니다.");
+                  return send(200, { report: data.candidates[0].content.parts[0].text });
+
                 } else {
-                  res.statusCode = 400;
-                  res.end(JSON.stringify({ error: "Unsupported type" }));
+                  return send(400, { error: "Invalid type" });
                 }
               } catch (error) {
-                console.error('Gemini Local Proxy Error:', error);
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: 'Failed to process AI request' }));
+                console.error('[Dev Gemini Proxy]', error);
+                send(500, { error: error instanceof Error ? error.message : 'Failed to process AI request' });
               }
             });
           } else {
@@ -92,10 +118,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    allowedHosts: true,
   },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
   },
+  }
 })

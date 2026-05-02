@@ -29,12 +29,38 @@ interface AIAnalysisOverlayProps {
 type Step = 'mode_select' | 'capture' | 'processing' | 'review';
 type AnalysisMode = 'food' | 'label';
 
+interface DetectedFoodItem {
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+  carbs: number;
+  icon?: string;
+}
+
+interface NutritionLabelData {
+  productName?: string;
+  totalCarbs: number;
+  sugars?: number;
+  servingSize?: number;
+  servingUnit?: string;
+  advice?: string;
+}
+
+const MAX_ITEM_CARBS = 300;
+
+function sanitizeCarbs(value: unknown): number {
+  const n = typeof value === 'number' ? value : parseFloat(String(value));
+  if (!isFinite(n) || n < 0) return 0;
+  return Math.min(n, MAX_ITEM_CARBS);
+}
+
 export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, onAddFoods }) => {
   const [step, setStep] = useState<Step>('mode_select');
   const [mode, setMode] = useState<AnalysisMode>('food');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [detectedItems, setDetectedItems] = useState<any[]>([]);
-  const [labelData, setLabelData] = useState<any>(null);
+  const [detectedItems, setDetectedItems] = useState<DetectedFoodItem[]>([]);
+  const [labelData, setLabelData] = useState<NutritionLabelData | null>(null);
   const [aiAdvice, setAiAdvice] = useState('');
   const [servingCount, setServingCount] = useState(1);
   const [userContext, setUserContext] = useState('');
@@ -171,33 +197,42 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
     setError(null);
     
     try {
-      console.log("Starting AI Analysis... (Mode:", mode, ")");
       const service = getGeminiService();
       const result = await service.analyzeImage(image, mode, userContext);
-      
-      console.log("AI Analysis Result Received:", result);
 
       if (!result || (mode === 'food' && !result.items) || (mode === 'label' && !result.totalCarbs && result.totalCarbs !== 0)) {
         throw new Error("AI로부터 유효한 분석 데이터를 받지 못했습니다. 다시 시도해 주세요.");
       }
       
       if (mode === 'food') {
-        // ID가 없는 경우를 대비해 보정
-        const itemsWithIds = (result.items || []).map((item: any, idx: number) => ({
-          ...item,
-          id: item.id || `detected_${Date.now()}_${idx}`
+        const rawItems = Array.isArray(result.items) ? result.items : [];
+        const itemsWithIds: DetectedFoodItem[] = rawItems.map((item: Record<string, unknown>, idx: number) => ({
+          id: typeof item.id === 'string' ? item.id : `detected_${Date.now()}_${idx}`,
+          name: typeof item.name === 'string' ? item.name : '알 수 없음',
+          amount: typeof item.amount === 'number' ? item.amount : 100,
+          unit: typeof item.unit === 'string' ? item.unit : 'g',
+          carbs: sanitizeCarbs(item.carbs),
+          icon: typeof item.icon === 'string' ? item.icon : undefined,
         }));
         setDetectedItems(itemsWithIds);
-        setAiAdvice(result.advice || '분석된 정보를 확인해 주세요.');
+        setAiAdvice(typeof result.advice === 'string' ? result.advice : '분석된 정보를 확인해 주세요.');
       } else {
-        setLabelData(result);
-        setAiAdvice(result.advice || '영양성분표 분석 결과를 확인해 주세요.');
+        const sanitized: NutritionLabelData = {
+          productName: typeof result.productName === 'string' ? result.productName : undefined,
+          totalCarbs: sanitizeCarbs(result.totalCarbs),
+          sugars: typeof result.sugars === 'number' ? sanitizeCarbs(result.sugars) : undefined,
+          servingSize: typeof result.servingSize === 'number' ? result.servingSize : undefined,
+          servingUnit: typeof result.servingUnit === 'string' ? result.servingUnit : undefined,
+          advice: typeof result.advice === 'string' ? result.advice : undefined,
+        };
+        setLabelData(sanitized);
+        setAiAdvice(sanitized.advice || '영양성분표 분석 결과를 확인해 주세요.');
       }
       
       setStep('review');
-    } catch (err: any) {
-      console.error("AI Analysis Failed Error:", err);
-      setError(err.message || "분석 도중 오류가 발생했습니다.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "분석 도중 오류가 발생했습니다.";
+      setError(message);
       setStep('capture');
     } finally {
       setIsProcessing(false);
@@ -408,30 +443,37 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
 
       {step === 'review' && (
         <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden animate-in slide-in-from-bottom-10 duration-700">
-          <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-8 pt-10 rounded-b-[48px] shadow-xl text-white relative overflow-hidden">
+          <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-5 pt-6 rounded-b-[32px] shadow-xl text-white relative overflow-hidden">
              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
              <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2 opacity-80">
-                <HugeiconsIcon icon={AiChat02Icon} size={16} />
-                <span className="text-[12px] font-black">AI 분석 결과</span>
+              <div className="flex items-center gap-2 mb-1.5 opacity-80">
+                <HugeiconsIcon icon={AiChat02Icon} size={14} />
+                <span className="text-[11px] font-black">AI 분석 결과</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-[36px] font-black">{totalCarbs.toFixed(0)}</span>
-                <span className="text-[18px] font-black opacity-80">g 탄수화물</span>
+                <span className="text-[30px] font-black">{totalCarbs.toFixed(0)}</span>
+                <span className="text-[16px] font-black opacity-80">g 탄수화물</span>
               </div>
-              {aiAdvice && <p className="text-[12px] font-bold mt-2 opacity-90 leading-relaxed max-w-[90%]">"{aiAdvice}"</p>}
              </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
-            {/* 촬영된 이미지 미리보기 */}
-            {capturedImage && (
-              <div className="bg-white rounded-[32px] p-2 shadow-premium border border-slate-100 overflow-hidden">
-                <img src={capturedImage} alt="Captured" className="w-full h-48 object-cover rounded-[28px]" />
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            {/* AI 조언 */}
+            {aiAdvice && (
+              <div className="flex items-start gap-2.5 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
+                <HugeiconsIcon icon={AiChat02Icon} size={14} className="text-brand-500 mt-0.5 shrink-0" />
+                <p className="text-[12px] font-bold text-brand-700 leading-relaxed">"{aiAdvice}"</p>
               </div>
             )}
 
-            <div className="bg-white rounded-[32px] p-6 shadow-premium space-y-5 border border-slate-100">
+            {/* 촬영된 이미지 미리보기 */}
+            {capturedImage && (
+              <div className="bg-white rounded-xl p-1.5 shadow-sm border border-slate-100 overflow-hidden">
+                <img src={capturedImage} alt="Captured" className="w-full h-32 object-cover rounded-lg" />
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4 border border-slate-100">
               <div className="flex items-center justify-between px-1">
                 <h4 className="text-[15px] font-black text-text-main">
                   {mode === 'food' ? '분석된 재료' : '영양 정보'}
@@ -506,54 +548,54 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
               )}
             </div>
 
-            <div className="bg-white rounded-[32px] p-6 shadow-premium space-y-4 border border-slate-100">
-              <div className="flex items-center gap-2 px-1">
-                <HugeiconsIcon icon={Note01Icon} size={18} className="text-brand-500" />
-                <h4 className="text-[15px] font-black text-text-main">AI가 더 고려할 점</h4>
+            <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3 border border-slate-100">
+              <div className="flex items-center gap-2">
+                <HugeiconsIcon icon={Note01Icon} size={16} className="text-brand-500" />
+                <h4 className="text-[14px] font-black text-text-main">AI가 더 고려할 점</h4>
               </div>
-              <textarea 
+              <textarea
                 value={userContext}
                 onChange={(e) => setUserContext(e.target.value)}
                 placeholder={mode === 'food' ? "예: '아주 맵게 먹어요', '소스는 절반만 넣었어요'" : "예: '절반은 남겼어요', '우유와 함께 먹어요'"}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[14px] font-bold outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all min-h-[100px]"
+                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all min-h-[80px]"
               />
             </div>
 
-            <button 
+            <button
               onClick={() => setSaveToMyFoods(!saveToMyFoods)}
               className={twMerge(
-                "w-full p-6 rounded-[32px] border-2 transition-all flex items-center justify-between group",
+                "w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between group",
                 saveToMyFoods ? "bg-brand-50 border-brand-500" : "bg-white border-slate-100"
               )}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className={twMerge(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                  "w-9 h-9 rounded-xl flex items-center justify-center transition-colors",
                   saveToMyFoods ? "bg-brand-500 text-white" : "bg-slate-50 text-text-sub"
                 )}>
-                  <HugeiconsIcon icon={FloppyDiskIcon} size={20} />
+                  <HugeiconsIcon icon={FloppyDiskIcon} size={16} />
                 </div>
                 <div className="text-left">
-                  <div className={twMerge("text-[15px] font-black", saveToMyFoods ? "text-brand-700" : "text-text-main")}>내 음식 목록에 저장</div>
-                  <div className="text-[12px] font-bold text-text-muted">나중에 이 음식을 바로 불러올 수 있어요</div>
+                  <div className={twMerge("text-[14px] font-black", saveToMyFoods ? "text-brand-700" : "text-text-main")}>내 음식 목록에 저장</div>
+                  <div className="text-[11px] font-bold text-text-muted">나중에 이 음식을 바로 불러올 수 있어요</div>
                 </div>
               </div>
               <div className={twMerge(
-                "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all",
+                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
                 saveToMyFoods ? "bg-brand-500 border-brand-500 scale-110" : "border-slate-200"
               )}>
-                {saveToMyFoods && <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} color="white" strokeWidth={3} />}
+                {saveToMyFoods && <HugeiconsIcon icon={CheckmarkBadge01Icon} size={12} color="white" strokeWidth={3} />}
               </div>
             </button>
           </div>
 
-          <div className="p-8 bg-white border-t border-slate-100">
-            <button 
+          <div className="p-4 bg-white border-t border-slate-100">
+            <button
               onClick={handleComplete}
-              className="w-full py-5 bg-brand-500 text-white rounded-[32px] text-[16px] font-black shadow-xl shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 bg-brand-500 text-white rounded-2xl text-[15px] font-black shadow-lg shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               식사 구성에 반영하기
-              <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
+              <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
             </button>
           </div>
         </div>

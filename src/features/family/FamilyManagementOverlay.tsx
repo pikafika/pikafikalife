@@ -29,16 +29,17 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
       return;
     }
 
+    const firestoreDb = db;
     let unsubscribeFamily: (() => void) | null = null;
 
     // 1. 먼저 사용자의 familyId를 감시
-    const unsubscribeUser = onSnapshot(doc(db, 'users', user.uid), (userDoc: any) => {
+    const unsubscribeUser = onSnapshot(doc(firestoreDb, 'users', user.uid), (userDoc: any) => {
       if (userDoc.exists() && userDoc.data().familyId) {
         const familyId = userDoc.data().familyId;
-        
+
         // 2. familyId가 확인되면 해당 가족 그룹 정보를 실시간으로 감시
         if (unsubscribeFamily) unsubscribeFamily();
-        unsubscribeFamily = onSnapshot(doc(db, 'families', familyId), (famDoc: any) => {
+        unsubscribeFamily = onSnapshot(doc(firestoreDb, 'families', familyId), (famDoc: any) => {
           if (famDoc.exists()) {
             setFamilyData(famDoc.data());
           }

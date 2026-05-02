@@ -45,25 +45,26 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   login: async () => {
+    if (!auth || !googleProvider) throw new Error('Firebase가 초기화되지 않았습니다.');
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      console.error('Login Error:', error);
-      
-      // 사용자에게 더 친절한 피드백 제공
-      if (error.code === 'auth/requests-from-referer-are-blocked') {
-        alert('현재 도메인(localhost 등)이 Firebase 콘솔의 "승인된 도메인"에 등록되지 않았습니다. Firebase 콘솔 > Authentication > Settings에서 도메인을 추가해 주세요.');
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        // 사용자가 창을 닫은 경우는 별도 처리 불필요
-      } else {
-        alert(`로그인 중 오류가 발생했습니다: ${error.message}`);
+    } catch (error: unknown) {
+      const firebaseError = error as { code?: string };
+      if (firebaseError.code === 'auth/popup-closed-by-user') return;
+
+      let userMessage = '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+      if (firebaseError.code === 'auth/requests-from-referer-are-blocked') {
+        userMessage = '이 도메인은 로그인이 허용되지 않습니다. 관리자에게 문의해 주세요.';
+      } else if (firebaseError.code === 'auth/network-request-failed') {
+        userMessage = '네트워크 연결을 확인해 주세요.';
       }
-      
-      throw error;
+
+      throw new Error(userMessage);
     }
   },
 
   logout: async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
       set({ user: null });

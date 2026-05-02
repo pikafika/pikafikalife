@@ -31,12 +31,13 @@ export const useInsulinCalc = (currentBG: number, totalCarbs: number) => {
       }, 0);
   }, [logs, settings.dia]);
 
-  // 식사 인슐린 계산: 탄수화물 / ICR
-  const mealInsulin = totalCarbs > 0 ? totalCarbs / settings.icr : 0;
+  // Guard against zero/negative settings values that would produce Infinity
+  const safeICR = settings.icr > 0 ? settings.icr : 10;
+  const safeISF = settings.isf > 0 ? settings.isf : 50;
 
-  // 교정 인슐린 계산: (현재 혈당 - 목표 혈당) / ISF - 현재 IOB
-  // 결과가 음수이면 0으로 처리 (안전성)
-  const rawCorrInsulin = (currentBG - settings.targetBG) / settings.isf - currentIOB;
+  const mealInsulin = totalCarbs > 0 ? totalCarbs / safeICR : 0;
+
+  const rawCorrInsulin = (currentBG - settings.targetBG) / safeISF - currentIOB;
   const corrInsulin = Math.max(0, rawCorrInsulin);
 
   // 총 인슐린 = 식사 인슐린 + 교정 인슐린

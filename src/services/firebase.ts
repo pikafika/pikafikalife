@@ -1,13 +1,13 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { 
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
+import {
   getFirestore,
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager 
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  Firestore
 } from "firebase/firestore";
 
-// Firebase 설정값 (Vite 환경변수 활용)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -17,36 +17,34 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Firebase 설정값 확인 및 초기화
 const isFirebaseConfigured = !!firebaseConfig.apiKey;
 
-let auth: any;
-let db: any;
-let googleProvider: any;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+let googleProvider: GoogleAuthProvider | undefined;
 
 if (isFirebaseConfigured) {
   try {
-    // 이미 초기화된 앱이 있으면 재사용, 없으면 새로 생성
-    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
-    
-    // Firestore 싱글톤 처리: 이미 초기화되었으면 getFirestore 사용
+
     try {
       db = getFirestore(app);
-    } catch (e) {
-      // 초기화 전이면 전역 설정과 함께 초기화
+    } catch {
       db = initializeFirestore(app, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         })
       });
     }
-    
+
     googleProvider = new GoogleAuthProvider();
   } catch (error) {
-    console.error("Firebase 초기화 중 에러 발생:", error);
+    if (import.meta.env.DEV) {
+      console.error("Firebase 초기화 중 에러 발생:", error);
+    }
   }
-} else {
+} else if (import.meta.env.DEV) {
   console.warn("Firebase API Key가 설정되지 않았습니다. .env 파일을 확인해 주세요.");
 }
 

@@ -21,7 +21,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { SeedingCard } from '../../components/SeedingCard';
 import { twMerge } from 'tailwind-merge';
 import { isAdmin } from '../../utils/permissions';
-import { useCloudSync } from '../../hooks/useCloudSync';
 
 interface DashboardProps {
   onOpenAIReport: () => void;
@@ -36,8 +35,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   onOpenInsightHub,
   onOpenFamilyMgmt 
 }) => {
-  useCloudSync(); // 로그인 시 데이터 동기화 시작
-  
   const { logs } = useHistoryStore();
   const { insights } = useAIStore();
   const { user } = useAuthStore();

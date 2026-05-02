@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PikafikaLife — IT 에이전트 시스템</title>
+  <style>
+    :root {
+      --brand: #06C755;
+      --brand-dim: rgba(6,199,85,0.15);
+      --bg: #0a0c0e;
+      --bg2: #111316;
+      --bg3: #181b1f;
+      --bg4: #1e2126;
+      --border: rgba(255,255,255,0.07);
+      --border-hi: rgba(255,255,255,0.15);
+      --text: #eef0f2;
+      --text-dim: #7a8390;
+      --text-mid: #b0b8c1;
+      /* Department colors */
+      --c-plan:    #4d9fff;
+      --c-design:  #b06eff;
+      --c-fe:      #00d4ff;
+      --c-be:      #ff8c42;
+      --c-ai:      #06C755;
+      --c-data:    #00c9a7;
+      --c-mkt:     #ff6eb4;
+      --c-sales:   #f5c518;
+      --c-med:     #ff4d4d;
+      --c-qa:      #ffa500;
+      --c-deploy:  #9b59b6;
+      --c-history: #6c757d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      padding: 48px 24px 36px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(6,199,85,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--brand-dim);
+      border: 1px solid rgba(6,199,85,0.3);
+      color: var(--brand);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--brand);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.5; transform:scale(1.3); }
+    }
+    .header h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .header h1 span { color: var(--brand); }
+    .header p { color: var(--text-dim); font-size: 15px; max-width: 560px; margin: 0 auto; }
+
+    /* ── TABS ── */
+    .tabs-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,12,14,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs {
+      display: flex;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: 14px 18px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color: var(--text-mid); }
+    .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    /* ── PANEL ── */
+    .tab-panel { display: none; max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+    .tab-panel.active { display: block; }
+
+    /* ── SECTION HEADER ── */
+    .sh {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sh::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .mb32 { margin-bottom: 32px; }
+    .mb48 { margin-bottom: 48px; }
+
+    /* ─────────────────────────────────────
+       TAB 1: OVERVIEW
+    ───────────────────────────────────── */
+    .arch-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* Orchestrator */
+    .orch-card {
+      width: 100%;
+      max-width: 680px;
+      background: linear-gradient(135deg, rgba(6,199,85,0.1), rgba(6,199,85,0.03));
+      border: 1.5px solid rgba(6,199,85,0.35);
+      border-radius: 14px;
+      padding: 20px 28px;
+      text-align: center;
+      position: relative;
+    }
+    .orch-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(6,199,85,0.2), transparent 60%);
+      pointer-events: none;
+    }
+    .orch-emoji { font-size: 28px; margin-bottom: 6px; }
+    .orch-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .orch-sub { font-size: 12px; color: var(--text-dim); }
+    .orch-tags {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .orch-tag {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      background: rgba(6,199,85,0.12);
+      color: var(--brand);
+      border: 1px solid rgba(6,199,85,0.2);
+    }
+
+    /* Arrow connector */
+    .arch-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0;
+    }
+    .arch-arrow .line {
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(to bottom, rgba(6,199,85,0.4), rgba(255,255,255,0.1));
+    }
+    .arch-arrow .head { color: var(--text-dim); font-size: 12px; line-height: 1; }
+
+    /* Department grid */
+    .dept-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+      max-width: 800px;
+    }
+    .dept-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+    .dept-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 10px 10px 0 0;
+    }
+    .dept-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+    .dept-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .dept-icon {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .dept-name { font-size: 13px; font-weight: 600; }
+    .dept-role { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+    .dept-agents {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .agent-chip {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 500;
+      background: var(--bg4);
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+    }
+
+    /* Bottom pipeline row */
+    .pipeline-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+      max-width: 800px;
+    }
+    .pipeline-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .pipeline-card:hover { border-color: var(--border-hi); }
+    .pipeline-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .pipeline-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .pipeline-desc { font-size: 11px; color: var(--text-dim); }
+
+    /* History card */
+    .history-card {
+      width: 100%;
+      max-width: 800px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .history-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      background: rgba(108,117,125,0.15);
+      border: 1px solid rgba(108,117,125,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .history-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .history-desc { font-size: 11px; color: var(--text-dim); }
+    .history-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
+    /* ─────────────────────────────────────
+       TAB 2: DEPARTMENTS
+    ───────────────────────────────────── */
+    .dept-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+    .dept-detail-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .dept-detail-card:hover { border-color: var(--border-hi); }
+    .dept-detail-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .ddc-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .ddc-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .ddc-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .ddc-sub { font-size: 11px; color: var(--text-dim); }
+    .ddc-section { margin-bottom: 12px; }
+    .ddc-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .ddc-list {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-mid);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .ddc-list li::before { content: '• '; color: var(--text-dim); }
+    .ddc-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .ddc-chip {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .ddc-file {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 500;
+      background: var(--bg4);
+      color: #a8c9f8;
+      border: 1px solid var(--border);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* ─────────────────────────────────────
+       TAB 3: WORKFLOW
+    ───────────────────────────────────── */
+    .wf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .wf-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .wf-header {
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .wf-badge {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .wf-title { font-size: 14px; font-weight: 600; }
+    .wf-desc { font-size: 11px; color: var(--text-dim); }
+    .wf-steps { padding: 16px 18px; }
+    .wf-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 5px 0;
+      position: relative;
+    }
+    .wf-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 26px;
+      width: 1px;
+      height: calc(100% - 8px);
+      background: var(--border);
+    }
+    .ws-num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--bg3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ws-num.crit { border-color: var(--c-med); color: var(--c-med); background: rgba(255,77,77,0.1); }
+    .ws-num.ok   { border-color: var(--brand); color: var(--brand); background: var(--brand-dim); }
+    .ws-text { font-size: 12px; color: var(--text-dim); padding-top: 1px; }
+    .ws-text strong { color: var(--text); font-weight: 600; }
+
+    /* ─────────────────────────────────────
+       TAB 4: HISTORY
+    ───────────────────────────────────── */
+    .history-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .info-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .info-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    pre {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 11px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #a8c9f8;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .file-tree {
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text-mid);
+      line-height: 2;
+    }
+    .file-tree .dir { color: var(--brand); font-weight: 600; }
+    .file-tree .file { color: #a8c9f8; }
+    .file-tree .comment { color: var(--text-dim); font-style: italic; }
+    .flow-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin: 2px;
+    }
+
+    /* ─────────────────────────────────────
+       TAB 5: BUILD PLAN
+    ───────────────────────────────────── */
+    .build-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .bt-item {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+    }
+    .bt-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .bt-circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      border: 2px solid;
+      flex-shrink: 0;
+    }
+    .bt-line {
+      width: 2px;
+      flex: 1;
+      min-height: 20px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+    .bt-item:last-child .bt-line { display: none; }
+    .bt-content {
+      padding: 4px 0 32px 18px;
+    }
+    .bt-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .bt-desc { font-size: 12px; color: var(--text-dim); line-height: 1.8; margin-bottom: 10px; }
+    .bt-files { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    /* ─────────────────────────────────────
+       UTILITY
+    ───────────────────────────────────── */
+    code {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #a8c9f8;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .tag-green { background: rgba(6,199,85,0.12); color: var(--brand); }
+    .tag-blue  { background: rgba(77,159,255,0.12); color: var(--c-plan); }
+    .tag-red   { background: rgba(255,77,77,0.12); color: var(--c-med); }
+    .tag-yellow{ background: rgba(245,197,24,0.12); color: var(--c-sales); }
+    .tag-purple{ background: rgba(176,110,255,0.15); color: var(--c-deploy); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    @media (max-width: 640px) {
+      .dept-grid { grid-template-columns: 1fr 1fr; }
+      .pipeline-row { grid-template-columns: 1fr; }
+      .history-layout { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">
+      <span class="dot"></span>
+      Phase 1 · 시각화 검토 중
+    </div>
+    <h1>PikafikaLife <span>IT 에이전트</span> 시스템</h1>
+    <p>기획·디자인·개발·마케팅·영업·연구팀이 협업하는<br>오케스트라 기반 자동화 에이전트 아키텍처</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('overview',this)">🏗 시스템 개요</button>
+      <button class="tab-btn" onclick="showTab('departments',this)">🏢 부서별 에이전트</button>
+      <button class="tab-btn" onclick="showTab('workflow',this)">⚡ 업무 흐름</button>
+      <button class="tab-btn" onclick="showTab('history',this)">📚 히스토리 관리</button>
+      <button class="tab-btn" onclick="showTab('buildplan',this)">🚀 구현 계획</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       TAB 1: OVERVIEW
+  ═══════════════════════════════════ -->
+  <div id="overview" class="tab-panel active">
+    <div class="sh mb32">전체 아키텍처</div>
+
+    <div class="arch-wrapper">
+
+      <!-- Orchestrator -->
+      <div class="orch-card">
+        <div class="orch-emoji">🎭</div>
+        <div class="orch-title">오케스트라 에이전트 (Orchestrator)</div>
+        <div class="orch-sub">업무 요청을 분석하고 적합한 팀 에이전트를 호출하는 지휘자</div>
+        <div class="orch-tags">
+          <span class="orch-tag">요청 분석</span>
+          <span class="orch-tag">팀 라우팅</span>
+          <span class="orch-tag">진행 조율</span>
+          <span class="orch-tag">히스토리 참조</span>
+          <span class="orch-tag">결과 취합</span>
+        </div>
+      </div>
+
+      <div class="arch-arrow">
+        <div class="line"></div>
+        <div class="head">▼</div>
+        <div class="line" style="height:8px"></div>
+      </div>
+
+      <!-- Department grid -->
+      <div class="dept-grid">
+        <!-- 기획팀 -->
+        <div class="dept-card" style="--c: var(--c-plan)">
+          <div style="content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-plan);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(77,159,255,0.12);border:1px solid rgba(77,159,255,0.2);">📋</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-plan)">기획팀</div>
+            </div>
+          </div>
+          <div class="dept-role">PRD · 로드맵 · 유저스토리</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/planner</span>
+            <span class="agent-chip">/code-architect</span>
+          </div>
+        </div>
+
+        <!-- 디자인팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-design);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(176,110,255,0.12);border:1px solid rgba(176,110,255,0.2);">🎨</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-design)">디자인팀</div>
+            </div>
+          </div>
+          <div class="dept-role">UI/UX · 디자인 시스템 · 컴포넌트 스펙</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/typescript-reviewer</span>
+          </div>
+        </div>
+
+        <!-- 프론트엔드팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-fe);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);">💻</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-fe)">프론트엔드팀</div>
+            </div>
+          </div>
+          <div class="dept-role">React · TypeScript · UI 구현</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/typescript-reviewer</span>
+            <span class="agent-chip">/tdd-guide</span>
+          </div>
+        </div>
+
+        <!-- 백엔드팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-be);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(255,140,66,0.12);border:1px solid rgba(255,140,66,0.2);">⚙️</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-be)">백엔드팀</div>
+            </div>
+          </div>
+          <div class="dept-role">API · Firebase · Firestore · 서버리스</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/database-reviewer</span>
+            <span class="agent-chip">/security-reviewer</span>
+          </div>
+        </div>
+
+        <!-- AI팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-ai);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(6,199,85,0.12);border:1px solid rgba(6,199,85,0.2);">🤖</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-ai)">AI팀</div>
+            </div>
+          </div>
+          <div class="dept-role">Gemini · 프롬프트 엔지니어링 · ML</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/healthcare-reviewer</span>
+            <span class="agent-chip">/security-reviewer</span>
+          </div>
+        </div>
+
+        <!-- 빅데이터팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-data);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);">📊</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-data)">빅데이터팀</div>
+            </div>
+          </div>
+          <div class="dept-role">분석 · 데이터 파이프라인 · 인사이트</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/database-reviewer</span>
+            <span class="agent-chip">/performance-optimizer</span>
+          </div>
+        </div>
+
+        <!-- 마케팅팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-mkt);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(255,110,180,0.1);border:1px solid rgba(255,110,180,0.2);">📢</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-mkt)">마케팅팀</div>
+            </div>
+          </div>
+          <div class="dept-role">앱스토어 · SEO · 콘텐츠 전략</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/seo-specialist</span>
+          </div>
+        </div>
+
+        <!-- 영업팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-sales);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.2);">💼</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-sales)">영업팀</div>
+            </div>
+          </div>
+          <div class="dept-role">B2B 파트너십 · 병원/클리닉 제안</div>
+          <div class="dept-agents">
+            <span class="agent-chip">general-purpose</span>
+          </div>
+        </div>
+
+        <!-- 연구팀 -->
+        <div class="dept-card">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-med);border-radius:10px 10px 0 0;"></div>
+          <div class="dept-head">
+            <div class="dept-icon" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.2);">🔬</div>
+            <div>
+              <div class="dept-name" style="color:var(--c-med)">1형 당뇨 연구팀</div>
+            </div>
+          </div>
+          <div class="dept-role">임상 정확성 · IOB 모델 · 의료 지침</div>
+          <div class="dept-agents">
+            <span class="agent-chip">/healthcare-reviewer</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">
+        <div class="line"></div>
+        <div class="head">▼</div>
+        <div class="line" style="height:8px"></div>
+      </div>
+
+      <!-- QA + Deploy -->
+      <div class="pipeline-row">
+        <div class="pipeline-card">
+          <div class="pipeline-icon" style="background:rgba(255,165,0,0.12);border:1px solid rgba(255,165,0,0.25);">🧪</div>
+          <div>
+            <div class="pipeline-name" style="color:var(--c-qa)">QA 에이전트</div>
+            <div class="pipeline-desc">테스트 계획 · E2E · 의료 안전 검증 · /e2e-runner · /tdd-guide</div>
+          </div>
+        </div>
+        <div class="pipeline-card">
+          <div class="pipeline-icon" style="background:rgba(155,89,182,0.12);border:1px solid rgba(155,89,182,0.25);">🚀</div>
+          <div>
+            <div class="pipeline-name" style="color:var(--c-deploy)">배포 에이전트</div>
+            <div class="pipeline-desc">CI/CD · Firebase Hosting · Vercel · 릴리스 관리</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">
+        <div class="line"></div>
+        <div class="head">▼</div>
+        <div class="line" style="height:8px"></div>
+      </div>
+
+      <!-- History -->
+      <div class="history-card">
+        <div class="history-icon">📚</div>
+        <div>
+          <div class="history-name">히스토리 관리 시스템</div>
+          <div class="history-desc">모든 업무 기록 → 오케스트라 에이전트가 다음 작업 시 참조</div>
+        </div>
+        <div class="history-tags">
+          <span class="tag tag-green">work-history.json</span>
+          <span class="tag tag-blue">HISTORY.md</span>
+          <span class="tag tag-yellow">task-log.md</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       TAB 2: DEPARTMENTS
+  ═══════════════════════════════════ -->
+  <div id="departments" class="tab-panel">
+    <div class="sh mb32">부서별 에이전트 상세</div>
+    <div class="dept-detail-grid">
+
+      <!-- 기획팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-plan);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(77,159,255,0.12);border:1px solid rgba(77,159,255,0.2);">📋</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-plan)">기획팀</div>
+            <div class="ddc-sub">Planning Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>신기능 PRD(요구사항 문서) 작성</li>
+            <li>분기별 로드맵 수립</li>
+            <li>유저 스토리 및 수용 기준 정의</li>
+            <li>기능 간 의존성 분석</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-plan);border-color:rgba(77,159,255,0.3);background:rgba(77,159,255,0.08)">/planner</span>
+            <span class="ddc-chip" style="color:var(--c-plan);border-color:rgba(77,159,255,0.3);background:rgba(77,159,255,0.08)">/code-architect</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/planning.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 디자인팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-design);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(176,110,255,0.12);border:1px solid rgba(176,110,255,0.2);">🎨</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-design)">디자인팀</div>
+            <div class="ddc-sub">Design Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>UI/UX 디자인 스펙 정의</li>
+            <li>LDS(브랜드 디자인 시스템) 관리</li>
+            <li>컴포넌트 인터랙션 설계</li>
+            <li>접근성 기준 검토</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-design);border-color:rgba(176,110,255,0.3);background:rgba(176,110,255,0.08)">/typescript-reviewer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/design.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 프론트엔드팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-fe);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);">💻</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-fe)">프론트엔드팀</div>
+            <div class="ddc-sub">Frontend Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>React 18 + TypeScript 컴포넌트 개발</li>
+            <li>Zustand 상태관리 훅 구현</li>
+            <li>UI 구현 (LDS 규칙 준수)</li>
+            <li>성능 최적화 (렌더링, 번들)</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-fe);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.08)">/typescript-reviewer</span>
+            <span class="ddc-chip" style="color:var(--c-fe);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.08)">/tdd-guide</span>
+            <span class="ddc-chip" style="color:var(--c-fe);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.08)">/performance-optimizer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/frontend.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 백엔드팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-be);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(255,140,66,0.12);border:1px solid rgba(255,140,66,0.2);">⚙️</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-be)">백엔드팀</div>
+            <div class="ddc-sub">Backend Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>Vercel 서버리스 API 개발</li>
+            <li>Firestore 스키마 및 보안 규칙</li>
+            <li>Firebase 인증 플로우</li>
+            <li>동기화 서비스 구현</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-be);border-color:rgba(255,140,66,0.3);background:rgba(255,140,66,0.08)">/database-reviewer</span>
+            <span class="ddc-chip" style="color:var(--c-be);border-color:rgba(255,140,66,0.3);background:rgba(255,140,66,0.08)">/security-reviewer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/backend.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-ai);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(6,199,85,0.12);border:1px solid rgba(6,199,85,0.2);">🤖</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-ai)">AI팀</div>
+            <div class="ddc-sub">AI Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>Gemini Vision/Flash 프롬프트 설계</li>
+            <li>AI 기능 통합 및 최적화</li>
+            <li>의료 AI 안전 가이드라인 준수</li>
+            <li>PHI 데이터 처리 정책 설계</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-ai);border-color:rgba(6,199,85,0.3);background:rgba(6,199,85,0.08)">/healthcare-reviewer</span>
+            <span class="ddc-chip" style="color:var(--c-ai);border-color:rgba(6,199,85,0.3);background:rgba(6,199,85,0.08)">/security-reviewer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/ai-team.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 빅데이터팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-data);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);">📊</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-data)">빅데이터팀</div>
+            <div class="ddc-sub">Big Data Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>사용자 혈당 패턴 분석</li>
+            <li>인슐린 효과 데이터 집계</li>
+            <li>AI 인사이트 데이터 파이프라인</li>
+            <li>대시보드 통계 최적화</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-data);border-color:rgba(0,201,167,0.3);background:rgba(0,201,167,0.08)">/database-reviewer</span>
+            <span class="ddc-chip" style="color:var(--c-data);border-color:rgba(0,201,167,0.3);background:rgba(0,201,167,0.08)">/performance-optimizer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/bigdata.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 마케팅팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-mkt);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(255,110,180,0.1);border:1px solid rgba(255,110,180,0.2);">📢</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-mkt)">마케팅팀</div>
+            <div class="ddc-sub">Marketing Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>앱스토어 최적화(ASO)</li>
+            <li>블로그/SNS 콘텐츠 전략</li>
+            <li>SEO 및 웹 노출 최적화</li>
+            <li>당뇨 커뮤니티 파트너십</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-mkt);border-color:rgba(255,110,180,0.3);background:rgba(255,110,180,0.08)">/seo-specialist</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/marketing.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 영업팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-sales);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.2);">💼</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-sales)">영업팀</div>
+            <div class="ddc-sub">Sales Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>병원/클리닉 파트너십 제안서</li>
+            <li>B2B 의료기관 온보딩 전략</li>
+            <li>사용자 전환율 분석</li>
+            <li>피드백 수집 및 반영</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-sales);border-color:rgba(245,197,24,0.3);background:rgba(245,197,24,0.08)">general-purpose</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/sales.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 연구팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-med);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.2);">🔬</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-med)">1형 당뇨 연구팀</div>
+            <div class="ddc-sub">T1D Research Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>Bilinear IOB 모델 임상 검토</li>
+            <li>OpenAPS/Loop 지침 정합성 확인</li>
+            <li>새 의학 연구 동향 반영</li>
+            <li>안전 범위(ICR/ISF/DIA) 근거 관리</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-med);border-color:rgba(255,77,77,0.3);background:rgba(255,77,77,0.08)">/healthcare-reviewer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/t1d-research.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- QA -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-qa);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(255,165,0,0.1);border:1px solid rgba(255,165,0,0.2);">🧪</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-qa)">QA 에이전트</div>
+            <div class="ddc-sub">Quality Assurance</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>Playwright E2E 테스트 계획 및 실행</li>
+            <li>의료 안전 케이스 검증 (저혈당 경고)</li>
+            <li>IOB 계산 회귀 테스트</li>
+            <li>크로스 브라우저 · 반응형 검증</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-qa);border-color:rgba(255,165,0,0.3);background:rgba(255,165,0,0.08)">/e2e-runner</span>
+            <span class="ddc-chip" style="color:var(--c-qa);border-color:rgba(255,165,0,0.3);background:rgba(255,165,0,0.08)">/tdd-guide</span>
+            <span class="ddc-chip" style="color:var(--c-qa);border-color:rgba(255,165,0,0.3);background:rgba(255,165,0,0.08)">/healthcare-reviewer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/qa.md</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 배포팀 -->
+      <div class="dept-detail-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c-deploy);border-radius:12px 12px 0 0;"></div>
+        <div class="ddc-header">
+          <div class="ddc-icon" style="background:rgba(155,89,182,0.12);border:1px solid rgba(155,89,182,0.2);">🚀</div>
+          <div>
+            <div class="ddc-title" style="color:var(--c-deploy)">배포 에이전트</div>
+            <div class="ddc-sub">Deployment Team</div>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">주요 업무</div>
+          <ul class="ddc-list">
+            <li>GitHub Actions CI/CD 파이프라인</li>
+            <li>Firebase Hosting 배포</li>
+            <li>Vercel 서버리스 배포</li>
+            <li>릴리스 노트 및 버전 관리</li>
+          </ul>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">호출되는 Claude 에이전트</div>
+          <div class="ddc-chips">
+            <span class="ddc-chip" style="color:var(--c-deploy);border-color:rgba(155,89,182,0.3);background:rgba(155,89,182,0.08)">/security-reviewer</span>
+          </div>
+        </div>
+        <div class="ddc-section">
+          <div class="ddc-label">생성되는 파일</div>
+          <div class="ddc-chips">
+            <span class="ddc-file">agents/deployment.md</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       TAB 3: WORKFLOW
+  ═══════════════════════════════════ -->
+  <div id="workflow" class="tab-panel">
+    <div class="sh mb32">업무 유형별 에이전트 흐름</div>
+    <div class="wf-grid">
+
+      <!-- A: 신규 기능 -->
+      <div class="wf-card">
+        <div class="wf-header" style="background:rgba(77,159,255,0.06)">
+          <div class="wf-badge" style="background:rgba(77,159,255,0.15);color:var(--c-plan)">A</div>
+          <div>
+            <div class="wf-title">신규 기능 개발</div>
+            <div class="wf-desc">SugarBeeChat, 가족 초대, FCM 알림 등</div>
+          </div>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="ws-num">1</div><div class="ws-text"><strong>기획팀</strong> PRD + 유저스토리 작성</div></div>
+          <div class="wf-step"><div class="ws-num">2</div><div class="ws-text"><strong>디자인팀</strong> UI/UX 스펙 정의</div></div>
+          <div class="wf-step"><div class="ws-num">3</div><div class="ws-text"><strong>프론트엔드 + 백엔드팀</strong> 병렬 개발</div></div>
+          <div class="wf-step"><div class="ws-num">4</div><div class="ws-text"><strong>AI팀</strong> (AI 관련 기능인 경우)</div></div>
+          <div class="wf-step"><div class="ws-num ok">5</div><div class="ws-text"><strong>QA 에이전트</strong> E2E 검증</div></div>
+          <div class="wf-step"><div class="ws-num ok">✓</div><div class="ws-text"><strong>배포 에이전트</strong> → 히스토리 기록</div></div>
+        </div>
+      </div>
+
+      <!-- B: 의료 계산 수정 -->
+      <div class="wf-card">
+        <div class="wf-header" style="background:rgba(255,77,77,0.06)">
+          <div class="wf-badge" style="background:rgba(255,77,77,0.15);color:var(--c-med)">B</div>
+          <div>
+            <div class="wf-title">의료 계산 수정</div>
+            <div class="wf-desc">calcIOB.ts, useInsulinCalc.ts — 강화 절차</div>
+          </div>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="ws-num crit">!</div><div class="ws-text"><strong>연구팀</strong> 임상 근거 검토 먼저 <span style="color:var(--c-med);font-size:10px">MANDATORY</span></div></div>
+          <div class="wf-step"><div class="ws-num">2</div><div class="ws-text"><strong>프론트엔드팀</strong> /tdd-guide 버그 재현 테스트</div></div>
+          <div class="wf-step"><div class="ws-num">3</div><div class="ws-text"><strong>프론트엔드팀</strong> 구현</div></div>
+          <div class="wf-step"><div class="ws-num crit">4</div><div class="ws-text"><strong>연구팀</strong> /healthcare-reviewer 최종 검토</div></div>
+          <div class="wf-step"><div class="ws-num ok">5</div><div class="ws-text"><strong>QA 에이전트</strong> 의료 안전 케이스 검증</div></div>
+          <div class="wf-step"><div class="ws-num ok">✓</div><div class="ws-text"><strong>배포</strong> → 히스토리에 임상 근거 링크 포함</div></div>
+        </div>
+      </div>
+
+      <!-- C: Firebase/DB 변경 -->
+      <div class="wf-card">
+        <div class="wf-header" style="background:rgba(255,140,66,0.06)">
+          <div class="wf-badge" style="background:rgba(255,140,66,0.15);color:var(--c-be)">C</div>
+          <div>
+            <div class="wf-title">Firebase / DB 변경</div>
+            <div class="wf-desc">firestore.rules, 컬렉션 추가, 인덱스</div>
+          </div>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="ws-num">1</div><div class="ws-text"><strong>백엔드팀</strong> 스키마 설계</div></div>
+          <div class="wf-step"><div class="ws-num crit">2</div><div class="ws-text"><strong>백엔드팀</strong> /database-reviewer + /security-reviewer 병렬 검토</div></div>
+          <div class="wf-step"><div class="ws-num">3</div><div class="ws-text"><strong>백엔드팀</strong> 구현 및 규칙 작성</div></div>
+          <div class="wf-step"><div class="ws-num ok">4</div><div class="ws-text"><strong>QA 에이전트</strong> 접근 권한 검증</div></div>
+          <div class="wf-step"><div class="ws-num ok">✓</div><div class="ws-text"><strong>배포</strong> → 히스토리 기록</div></div>
+        </div>
+      </div>
+
+      <!-- D: AI 기능 변경 -->
+      <div class="wf-card">
+        <div class="wf-header" style="background:rgba(6,199,85,0.06)">
+          <div class="wf-badge" style="background:rgba(6,199,85,0.15);color:var(--brand)">D</div>
+          <div>
+            <div class="wf-title">AI / Gemini 기능 변경</div>
+            <div class="wf-desc">api/gemini.ts, 프롬프트 엔지니어링</div>
+          </div>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="ws-num crit">1</div><div class="ws-text"><strong>AI팀</strong> /healthcare-reviewer + /security-reviewer 선행 검토</div></div>
+          <div class="wf-step"><div class="ws-num">2</div><div class="ws-text"><strong>AI팀</strong> 프롬프트 설계 및 구현</div></div>
+          <div class="wf-step"><div class="ws-num crit">3</div><div class="ws-text"><strong>연구팀</strong> 의료 안전 최종 확인</div></div>
+          <div class="wf-step"><div class="ws-num ok">4</div><div class="ws-text"><strong>QA 에이전트</strong> PHI 노출 여부 검증</div></div>
+          <div class="wf-step"><div class="ws-num ok">✓</div><div class="ws-text"><strong>배포</strong> → 히스토리 기록</div></div>
+        </div>
+      </div>
+
+      <!-- E: 마케팅/영업 -->
+      <div class="wf-card">
+        <div class="wf-header" style="background:rgba(255,110,180,0.06)">
+          <div class="wf-badge" style="background:rgba(255,110,180,0.15);color:var(--c-mkt)">E</div>
+          <div>
+            <div class="wf-title">마케팅 / 영업 자료</div>
+            <div class="wf-desc">콘텐츠, 제안서, SEO, ASO</div>
+          </div>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="ws-num">1</div><div class="ws-text"><strong>기획팀</strong> 타겟 및 메시지 방향 설정</div></div>
+          <div class="wf-step"><div class="ws-num">2</div><div class="ws-text"><strong>마케팅팀 / 영업팀</strong> 콘텐츠·자료 제작</div></div>
+          <div class="wf-step"><div class="ws-num">3</div><div class="ws-text"><strong>디자인팀</strong> 비주얼 검토</div></div>
+          <div class="wf-step"><div class="ws-num ok">✓</div><div class="ws-text">배포(퍼블리시) → 히스토리 기록</div></div>
+        </div>
+      </div>
+
+      <!-- F: 연구 업데이트 -->
+      <div class="wf-card">
+        <div class="wf-header" style="background:rgba(255,77,77,0.06)">
+          <div class="wf-badge" style="background:rgba(255,77,77,0.15);color:var(--c-med)">F</div>
+          <div>
+            <div class="wf-title">의료 연구 업데이트</div>
+            <div class="wf-desc">새 임상 지침 반영, 안전 범위 재검토</div>
+          </div>
+        </div>
+        <div class="wf-steps">
+          <div class="wf-step"><div class="ws-num crit">1</div><div class="ws-text"><strong>연구팀</strong> 새 근거 문헌 분석</div></div>
+          <div class="wf-step"><div class="ws-num">2</div><div class="ws-text"><strong>기획팀</strong> 변경 범위 영향도 분석</div></div>
+          <div class="wf-step"><div class="ws-num crit">3</div><div class="ws-text"><strong>연구팀 + AI팀</strong> 의료 안전 하드 블록 검토</div></div>
+          <div class="wf-step"><div class="ws-num">4</div><div class="ws-text"><strong>프론트엔드팀</strong> 구현 (워크플로우 B 적용)</div></div>
+          <div class="wf-step"><div class="ws-num ok">✓</div><div class="ws-text"><strong>QA → 배포</strong> → 히스토리에 근거 문헌 저장</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       TAB 4: HISTORY
+  ═══════════════════════════════════ -->
+  <div id="history" class="tab-panel">
+    <div class="sh mb32">히스토리 관리 시스템</div>
+
+    <div class="history-layout mb48">
+      <!-- 파일 구조 -->
+      <div class="info-card">
+        <div class="info-card-title">📁 파일 구조</div>
+        <div class="file-tree">
+          <span class="dir">logs/</span><br>
+          &nbsp;&nbsp;<span class="file">work-history.json</span> &nbsp;<span class="comment">← 구조화된 업무 로그</span><br>
+          &nbsp;&nbsp;<span class="file">HISTORY.md</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← 사람이 읽는 히스토리</span><br>
+          &nbsp;&nbsp;<span class="file">task-log.md</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← 진행 중 태스크</span><br>
+          <br>
+          <span class="dir">.claude/agents/</span><br>
+          &nbsp;&nbsp;<span class="file">orchestrator.md</span> &nbsp;&nbsp;<span class="comment">← 오케스트라 에이전트</span><br>
+          &nbsp;&nbsp;<span class="file">planning.md</span><br>
+          &nbsp;&nbsp;<span class="file">design.md</span><br>
+          &nbsp;&nbsp;<span class="file">frontend.md</span><br>
+          &nbsp;&nbsp;<span class="file">backend.md</span><br>
+          &nbsp;&nbsp;<span class="file">ai-team.md</span><br>
+          &nbsp;&nbsp;<span class="file">bigdata.md</span><br>
+          &nbsp;&nbsp;<span class="file">marketing.md</span><br>
+          &nbsp;&nbsp;<span class="file">sales.md</span><br>
+          &nbsp;&nbsp;<span class="file">t1d-research.md</span><br>
+          &nbsp;&nbsp;<span class="file">qa.md</span><br>
+          &nbsp;&nbsp;<span class="file">deployment.md</span>
+        </div>
+      </div>
+
+      <!-- JSON 구조 -->
+      <div class="info-card">
+        <div class="info-card-title">🗂 work-history.json 구조</div>
+        <pre>{
+  "version": "1.0",
+  "entries": [
+    {
+      "id": "2026-05-02-001",
+      "date": "2026-05-02",
+      "type": "feature",
+      "title": "SugarBeeChat Gemini 연결",
+      "teams": ["ai", "frontend", "qa"],
+      "workflow": "D",
+      "files_changed": [
+        "api/gemini.ts",
+        "SugarBeeChat.tsx",
+        "useAIStore.ts"
+      ],
+      "agents_used": [
+        "healthcare-reviewer",
+        "security-reviewer",
+        "typescript-reviewer"
+      ],
+      "outcome": "success",
+      "notes": "PHI 노출 방지 시스템 프롬프트 적용",
+      "references": [],
+      "duration_hrs": 4
+    }
+  ]
+}</pre>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- 오케스트라가 히스토리를 사용하는 방법 -->
+      <div class="info-card">
+        <div class="info-card-title">🎭 오케스트라가 히스토리를 참조하는 방법</div>
+        <ul class="ddc-list" style="font-size:13px;gap:8px;display:flex;flex-direction:column;">
+          <li>새 업무 요청 시 <code>work-history.json</code>에서 유사 업무 검색</li>
+          <li>이전에 사용된 에이전트 순서 참고</li>
+          <li>실패·주의사항 notes 확인 후 같은 실수 방지</li>
+          <li>의료 관련 변경 시 이전 임상 근거 references 참조</li>
+          <li>파일 변경 이력으로 충돌 가능성 예측</li>
+        </ul>
+      </div>
+
+      <!-- 히스토리 기록 시점 -->
+      <div class="info-card">
+        <div class="info-card-title">📝 히스토리 기록 시점</div>
+        <ul class="ddc-list" style="font-size:13px;gap:8px;display:flex;flex-direction:column;">
+          <li>배포 에이전트가 배포 완료 직후 자동 기록</li>
+          <li>QA 에이전트가 검증 결과 포함</li>
+          <li>각 팀 에이전트가 사용한 리뷰어 에이전트 목록 포함</li>
+          <li>의료 변경의 경우 근거 문헌 링크 필수 포함</li>
+          <li>실패 배포도 기록 (원인 + 해결 방법)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       TAB 5: BUILD PLAN
+  ═══════════════════════════════════ -->
+  <div id="buildplan" class="tab-panel">
+    <div class="sh mb32">구현 단계별 계획</div>
+
+    <div class="build-timeline">
+
+      <div class="bt-item">
+        <div class="bt-left">
+          <div class="bt-circle" style="border-color:var(--brand);color:var(--brand);background:var(--brand-dim)">1</div>
+          <div class="bt-line"></div>
+        </div>
+        <div class="bt-content">
+          <div class="bt-title">오케스트라 에이전트 구축</div>
+          <div class="bt-desc">
+            모든 에이전트의 지휘자. 업무 요청 분석 → 팀 라우팅 → 히스토리 참조 → 결과 취합.<br>
+            핵심 로직: 업무 유형 감지 키워드 매핑 + 팀 에이전트 호출 순서 결정.
+          </div>
+          <div class="bt-files">
+            <span class="ddc-file">.claude/agents/orchestrator.md</span>
+            <span class="ddc-file">logs/work-history.json</span>
+            <span class="ddc-file">logs/HISTORY.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bt-item">
+        <div class="bt-left">
+          <div class="bt-circle" style="border-color:var(--c-plan);color:var(--c-plan);background:rgba(77,159,255,0.1)">2</div>
+          <div class="bt-line"></div>
+        </div>
+        <div class="bt-content">
+          <div class="bt-title">개발 팀 에이전트 (5개)</div>
+          <div class="bt-desc">
+            기획 · 디자인 · 프론트엔드 · 백엔드 · AI팀 에이전트 파일 작성.<br>
+            각 에이전트는 역할 정의, 사용할 Claude 에이전트 목록, PikafikaLife 프로젝트 컨텍스트를 포함.
+          </div>
+          <div class="bt-files">
+            <span class="ddc-file">agents/planning.md</span>
+            <span class="ddc-file">agents/design.md</span>
+            <span class="ddc-file">agents/frontend.md</span>
+            <span class="ddc-file">agents/backend.md</span>
+            <span class="ddc-file">agents/ai-team.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bt-item">
+        <div class="bt-left">
+          <div class="bt-circle" style="border-color:var(--c-data);color:var(--c-data);background:rgba(0,201,167,0.1)">3</div>
+          <div class="bt-line"></div>
+        </div>
+        <div class="bt-content">
+          <div class="bt-title">비개발 팀 에이전트 (4개)</div>
+          <div class="bt-desc">
+            빅데이터 · 마케팅 · 영업 · 1형 당뇨 연구팀 에이전트 파일 작성.<br>
+            연구팀은 의료 안전 하드 규칙(CLAUDE.md MED-*)을 에이전트 컨텍스트에 내장.
+          </div>
+          <div class="bt-files">
+            <span class="ddc-file">agents/bigdata.md</span>
+            <span class="ddc-file">agents/marketing.md</span>
+            <span class="ddc-file">agents/sales.md</span>
+            <span class="ddc-file">agents/t1d-research.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bt-item">
+        <div class="bt-left">
+          <div class="bt-circle" style="border-color:var(--c-qa);color:var(--c-qa);background:rgba(255,165,0,0.1)">4</div>
+          <div class="bt-line"></div>
+        </div>
+        <div class="bt-content">
+          <div class="bt-title">QA + 배포 에이전트</div>
+          <div class="bt-desc">
+            QA: Playwright E2E + 의료 안전 케이스 체크리스트 내장.<br>
+            배포: Firebase/Vercel 배포 절차 + 완료 후 히스토리 자동 기록 로직.
+          </div>
+          <div class="bt-files">
+            <span class="ddc-file">agents/qa.md</span>
+            <span class="ddc-file">agents/deployment.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bt-item">
+        <div class="bt-left">
+          <div class="bt-circle" style="border-color:var(--c-history);color:var(--text-mid);background:var(--bg3)">5</div>
+          <div class="bt-line"></div>
+        </div>
+        <div class="bt-content">
+          <div class="bt-title">히스토리 시스템 초기화</div>
+          <div class="bt-desc">
+            <code>logs/</code> 디렉토리 생성 및 초기 JSON 스키마 세팅.<br>
+            기존 5개 완성 기능을 히스토리에 소급 기록하여 오케스트라가 컨텍스트로 활용 가능하게 설정.
+          </div>
+          <div class="bt-files">
+            <span class="ddc-file">logs/work-history.json</span>
+            <span class="ddc-file">logs/HISTORY.md</span>
+            <span class="ddc-file">logs/task-log.md</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bt-item">
+        <div class="bt-left">
+          <div class="bt-circle" style="border-color:var(--brand);color:var(--brand);background:var(--brand-dim)">✓</div>
+          <div class="bt-line"></div>
+        </div>
+        <div class="bt-content">
+          <div class="bt-title">시스템 검증 및 워크플로우 테스트</div>
+          <div class="bt-desc">
+            오케스트라에게 실제 요청("SugarBeeChat Gemini 연결해줘")을 하여<br>
+            팀 라우팅 → 에이전트 호출 순서 → 히스토리 기록이 정상 동작하는지 확인.
+          </div>
+          <div class="bt-files">
+            <span class="tag tag-green">워크플로우 D 테스트</span>
+            <span class="tag tag-blue">히스토리 기록 확인</span>
+            <span class="tag tag-red">의료 안전 게이트 확인</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Summary card -->
+    <div style="background:var(--bg2);border:1px solid rgba(6,199,85,0.2);border-radius:12px;padding:20px 24px;margin-top:32px;">
+      <div style="font-size:13px;font-weight:700;color:var(--brand);margin-bottom:12px;">구현 범위 요약</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;font-size:12px;color:var(--text-mid)">
+        <div><strong style="color:var(--text)">에이전트 파일</strong><br>11개 (오케스트라 1 + 팀 10)</div>
+        <div><strong style="color:var(--text)">히스토리 파일</strong><br>3개 (JSON + MD 2)</div>
+        <div><strong style="color:var(--text)">총 생성 파일</strong><br>약 14개</div>
+        <div><strong style="color:var(--text)">예상 구축 시간</strong><br>1~2시간</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function showTab(id, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+</body>
+</html>
