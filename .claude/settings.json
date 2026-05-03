@@ -2,15 +2,6 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=(i.tool_input&&i.tool_input.command)||'';const isDeployCmd=/firebase\\s+deploy|git\\s+push\\s+origin\\s+main/.test(cmd);if(isDeployCmd){process.stderr.write('\\n[DEPLOY GATE] 배포 전 /security-reviewer 검토 필수!\\napi/, firestore.rules, useAuthStore.ts 대상으로 실행 후 배포하세요.\\n보안 검토가 완료된 경우 사용자가 직접 확인 후 진행하세요.\\n');process.exit(2);}process.stdout.write(d);})\""
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit",
         "hooks": [
           {

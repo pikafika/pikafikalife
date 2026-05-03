@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { 
-  Cancel01Icon, 
-  UserGroupIcon, 
-  Copy01Icon, 
+import {
+  Cancel01Icon,
+  UserGroupIcon,
+  Copy01Icon,
   Link01Icon,
   CheckmarkBadge01Icon,
   HelpCircleIcon
 } from '@hugeicons/core-free-icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { db } from '../../services/firebase';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 interface FamilyManagementOverlayProps {
   onClose: () => void;
@@ -22,6 +22,14 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
   const [inviteCodeInput, setInviteCodeInput] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
 
   useEffect(() => {
     if (!user || !db) {
@@ -32,12 +40,10 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
     const firestoreDb = db;
     let unsubscribeFamily: (() => void) | null = null;
 
-    // 1. 먼저 사용자의 familyId를 감시
     const unsubscribeUser = onSnapshot(doc(firestoreDb, 'users', user.uid), (userDoc: any) => {
       if (userDoc.exists() && userDoc.data().familyId) {
         const familyId = userDoc.data().familyId;
 
-        // 2. familyId가 확인되면 해당 가족 그룹 정보를 실시간으로 감시
         if (unsubscribeFamily) unsubscribeFamily();
         unsubscribeFamily = onSnapshot(doc(firestoreDb, 'families', familyId), (famDoc: any) => {
           if (famDoc.exists()) {
@@ -64,21 +70,38 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
 
   const handleCopyCode = () => {
     if (familyData?.inviteCode) {
-      try {
-        navigator.clipboard.writeText(familyData.inviteCode);
+      navigator.clipboard.writeText(familyData.inviteCode).then(() => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
-      } catch (err) {
-        console.error("Copy failed:", err);
-        alert("코드 복사에 실패했습니다. 직접 선택해서 복사해 주세요.");
-      }
+      }).catch(() => {
+        showToast('코드 복사에 실패했습니다. 직접 선택해서 복사해 주세요.');
+      });
     } else {
-      alert("공유 가능한 코드가 아직 생성되지 않았습니다.");
+      showToast('공유 가능한 코드가 아직 생성되지 않았습니다.');
     }
+  };
+
+  const handleJoin = () => {
+    setJoinError(null);
+    if (inviteCodeInput.length !== 6) {
+      setJoinError('6자리 코드를 입력해 주세요.');
+      return;
+    }
+    setJoinLoading(true);
+    setTimeout(() => {
+      setJoinLoading(false);
+      showToast('가족 연결 기능을 곧 출시할게요! 🙌');
+    }, 600);
   };
 
   return (
     <div className="fixed top-0 bottom-0 left-0 right-0 mx-auto w-full max-w-[500px] z-[9999] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden shadow-2xl border-x border-gray-100">
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[99999] bg-gray-900 text-white text-[13px] font-bold px-5 py-3 rounded-lg shadow-xl animate-in fade-in duration-200 max-w-[280px] text-center pointer-events-none">
+          {toast}
+        </div>
+      )}
+
       <header className="p-6 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-md bg-brand-500 flex items-center justify-center text-white">
@@ -91,13 +114,13 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain p-6 space-y-8">
         {/* 내 가족 코드 섹션 */}
         <section className="bg-gray-50 rounded-lg p-8 text-center border border-gray-100">
           <h4 className="text-[15px] font-bold text-text-main mb-2">나의 가족 참여 코드</h4>
           <p className="text-[12px] font-medium text-text-muted mb-8 leading-relaxed">다른 가족에게 이 코드를 공유하여 <br /> 실시간으로 기록을 함께 보세요.</p>
-          
-          <div className="bg-white rounded-lg p-8 border border-gray-100 shadow-sm relative group min-h-[120px] flex items-center justify-center">
+
+          <div className="bg-white rounded-lg p-8 border border-gray-100 shadow-sm relative overflow-hidden min-h-[120px] flex items-center justify-center">
             {loading ? (
               <div className="flex flex-col items-center gap-3">
                 <div className="w-6 h-6 border-3 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
@@ -109,15 +132,15 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
               </span>
             )}
             {!loading && (
-              <button 
+              <button
                 onClick={handleCopyCode}
-                className="absolute -right-3 -bottom-3 w-12 h-12 bg-white border border-gray-200 rounded-lg shadow-md flex items-center justify-center text-brand-500 active:scale-90 transition-all hover:border-brand-200"
+                className="absolute right-3 bottom-3 w-10 h-10 bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center text-brand-500 active:scale-90 transition-all hover:border-brand-200 hover:bg-brand-50"
               >
-                <HugeiconsIcon icon={isCopied ? CheckmarkBadge01Icon : Copy01Icon} size={20} strokeWidth={2.5} />
+                <HugeiconsIcon icon={isCopied ? CheckmarkBadge01Icon : Copy01Icon} size={18} strokeWidth={2.5} />
               </button>
             )}
           </div>
-          {isCopied && <p className="text-brand-500 text-[11px] font-bold mt-6 animate-pulse">코드가 클립보드에 복사되었습니다!</p>}
+          {isCopied && <p className="text-brand-500 text-[11px] font-bold mt-4 animate-pulse">코드가 클립보드에 복사되었습니다!</p>}
         </section>
 
         {/* 코드 입력하여 참여하기 */}
@@ -127,18 +150,27 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
             초대 코드로 가족 참여하기
           </h4>
           <div className="flex gap-2">
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="6자리 코드 입력"
               value={inviteCodeInput}
-              onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
-              className="flex-1 bg-gray-50 border border-gray-100 rounded-sm px-5 py-4 font-bold text-text-main placeholder:text-gray-300 focus:border-brand-500 focus:bg-white outline-none transition-all uppercase tracking-widest text-[16px]"
+              onChange={(e) => { setInviteCodeInput(e.target.value.toUpperCase()); setJoinError(null); }}
+              className={`flex-1 bg-gray-50 border rounded-sm px-5 py-4 font-bold text-text-main placeholder:text-gray-300 focus:bg-white outline-none transition-all uppercase tracking-widest text-[16px] ${joinError ? 'border-red-300 focus:border-red-400' : 'border-gray-100 focus:border-brand-500'}`}
               maxLength={6}
             />
-            <button className="bg-gray-900 text-white px-8 rounded-sm font-bold text-[14px] active:scale-95 transition-all shadow-sm">
-              연결하기
+            <button
+              onClick={handleJoin}
+              disabled={joinLoading}
+              className="bg-gray-900 text-white px-8 rounded-sm font-bold text-[14px] active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[88px]"
+            >
+              {joinLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : '연결하기'}
             </button>
           </div>
+          {joinError && (
+            <p className="text-red-500 text-[12px] font-bold pl-1">{joinError}</p>
+          )}
         </section>
 
         {/* 도움말 */}
@@ -151,7 +183,7 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
       </div>
 
       <div className="p-6 pt-0">
-        <button 
+        <button
           onClick={onClose}
           className="w-full lds-button-primary"
         >
