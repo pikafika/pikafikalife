@@ -79,7 +79,25 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     } else if (type === "insights" || type === "coaching") {
       const prompt = type === "insights"
-        ? `Analyze these logs for a diabetic: ${JSON.stringify(safeLogs)}. Return 4 insights in JSON array.`
+        ? `당신은 1형 당뇨 전문 코치입니다. 아래 혈당 기록을 분석하여 건강 인사이트 4개를 JSON 배열로 반환하세요.
+로그: ${JSON.stringify(safeLogs)}
+
+반드시 아래 JSON 형식만 반환하고 다른 텍스트는 절대 포함하지 마세요:
+[
+  {
+    "id": 101,
+    "title": "카테고리명",
+    "label": "인사이트 제목(20자 이내)",
+    "color": "bg-brand-50 text-brand-600",
+    "icon": "이모지 1개",
+    "content": {
+      "subtitle": "소제목",
+      "description": "2~3문장 설명",
+      "tips": ["팁1", "팁2", "팁3"]
+    }
+  }
+]
+id는 101~199 사이 숫자, icon은 반드시 이모지 1개, color는 반드시 Tailwind 클래스 문자열. 한국어로 작성.`
         : `Provide coaching: ${JSON.stringify(safeLogs)}. Korean.`;
 
       const response = await fetch(

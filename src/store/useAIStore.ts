@@ -28,10 +28,17 @@ export const useAIStore = create<AIState>()(
 
       setInsights: (newInsights) =>
         set((state) => {
+          const isValidInsight = (i: unknown): i is InsightStory =>
+            !!i &&
+            typeof (i as InsightStory).icon === 'string' &&
+            typeof (i as InsightStory).color === 'string' &&
+            typeof (i as InsightStory).label === 'string' &&
+            !!(i as InsightStory).content?.description;
+          const validNew = Array.isArray(newInsights) ? newInsights.filter(isValidInsight) : [];
           const existingIds = new Set(state.insights.map(i => i.id));
-          const filteredNew = newInsights.filter(i => !existingIds.has(i.id));
+          const filteredNew = validNew.filter(i => !existingIds.has(i.id));
           const merged = [...filteredNew, ...state.insights];
-          return { insights: merged.slice(0, 50) }; // cap to prevent unbounded growth
+          return { insights: merged.slice(0, 50) };
         }),
       addCoachingHistory: (coaching) => 
         set((state) => ({ 
@@ -47,7 +54,7 @@ export const useAIStore = create<AIState>()(
       }),
     }),
     {
-      name: 'pika-ai-storage-v4', // 스토리지 버전업으로 초기 데이터(10개) 및 병합 로직 강제 적용
+      name: 'pika-ai-storage-v5', // v5: AI 인사이트 유효성 검사 추가, 오염 데이터 초기화
     }
   )
 );
