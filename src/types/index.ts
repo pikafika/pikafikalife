@@ -27,6 +27,8 @@ export interface LogEntry {
   iobAtTime: number;
   foods: {
     foodId: string;
+    name?: string;
+    emoji?: string;
     amount: number;
   }[];
   isEaten: boolean;

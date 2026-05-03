@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHistoryStore } from '../../store/useHistoryStore';
+import { useCustomFoodStore } from '../../store/useCustomFoodStore';
 import { FOOD_DB } from '../../data/food_db';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { 
@@ -18,6 +19,7 @@ import { twMerge } from 'tailwind-merge';
 
 export default function History() {
   const { logs, removeLog, updateLog } = useHistoryStore();
+  const { customFoods } = useCustomFoodStore();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [tempMemo, setTempMemo] = useState('');
@@ -49,9 +51,13 @@ export default function History() {
     setEditingMemoId(null);
   };
 
-  const getFoodName = (foodId: string) => {
-    const food = FOOD_DB.find(f => f.id === foodId);
-    return food ? `${food.emoji} ${food.name}` : '알 수 없는 음식';
+  const getFoodName = (entry: { foodId: string; name?: string; emoji?: string }) => {
+    const dbFood = FOOD_DB.find(f => f.id === entry.foodId);
+    if (dbFood) return `${dbFood.emoji} ${dbFood.name}`;
+    const customFood = customFoods.find(f => f.id === entry.foodId);
+    if (customFood) return `${customFood.emoji} ${customFood.name}`;
+    if (entry.name) return `${entry.emoji || '🍴'} ${entry.name}`;
+    return '알 수 없는 음식';
   };
 
   if (logs.length === 0) {
@@ -183,7 +189,7 @@ export default function History() {
                         <div className="flex flex-wrap gap-2 text-wrap">
                           {log.foods.map((f, idx) => (
                             <span key={idx} className="px-3 py-1.5 bg-brand-50 text-brand-600 text-[13px] font-bold rounded-sm border border-brand-100">
-                              {getFoodName(f.foodId)} {f.amount}
+                              {getFoodName(f)} {f.amount}
                             </span>
                           ))}
                         </div>

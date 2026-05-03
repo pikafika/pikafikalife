@@ -93,7 +93,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
       corrInsulin,
       totalInsulin,
       iobAtTime: currentIOB,
-      foods: selectedFoods.map(f => ({ foodId: f.id, amount: f.count })),
+      foods: selectedFoods.map(f => ({ foodId: f.id, name: f.name, emoji: f.emoji, amount: f.count })),
       isEaten: true,
       memo,
       author: user ? {

@@ -32,6 +32,7 @@ function App() {
 
   const { logs } = useHistoryStore();
   const { insights } = useAIStore();
+  const hubInsights = insights.length > 0 ? insights : INSIGHTS_DATA;
 
   const stats = {
     totalCarbs: (logs || []).reduce((acc, curr) => acc + (curr.totalCarbs || 0), 0),
@@ -120,13 +121,13 @@ function App() {
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-3">
             <p className="text-[13px] font-bold text-text-muted mb-4">
-              총 {insights.length}개의 전문 지식
+              총 {hubInsights.length}개의 전문 지식
             </p>
-            {insights.map((insight, index) => (
+            {hubInsights.map((insight, index) => (
               <button
                 key={`${insight.id}-${index}`}
                 onClick={() => {
-                  setViewingStories(insights);
+                  setViewingStories(hubInsights);
                   setSelectedStoryIndex(index);
                   setIsInsightHubOpen(false);
                 }}
