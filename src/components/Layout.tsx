@@ -9,10 +9,7 @@ interface LayoutProps {
   onOpenCalculator?: () => void;
 }
 
-import { useViewportHeight } from '../hooks/useViewportHeight';
-
 export default function Layout({ children, activeTab, onTabChange, onOpenCalculator }: LayoutProps) {
-  useViewportHeight(); // 뷰포트 변화 감지 및 CSS 변수(--viewport-bottom-offset) 업데이트
 
   const getTitle = () => {
     switch (activeTab) {

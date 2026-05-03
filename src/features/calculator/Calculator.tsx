@@ -167,7 +167,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
       </div>
 
       {/* 단계별 UI - 메인 영역 */}
-      <div className="flex-1 px-4 pb-[92px] relative overflow-hidden">
+      <div className="flex-1 px-4 pb-[92px] relative overflow-y-auto overscroll-y-contain">
         {step === 1 && (
           <div className="h-full flex flex-col transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
             {/* 혈당 수치 카드 - 상단 여백 12px(mt-3), 남은 높이 전체 채우기(flex-1) */}
@@ -330,7 +330,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
                 </div>
               ) : (
                 <p className="text-[13px] font-medium text-text-main leading-relaxed">
-                  {insights[0]?.content.description || "데이터를 분석하여 더 나은 관리를 도와드릴게요."}
+                  {insights[0]?.content?.description || "데이터를 분석하여 더 나은 관리를 도와드릴게요."}
                 </p>
               )}
             </div>

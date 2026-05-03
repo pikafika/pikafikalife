@@ -22,8 +22,7 @@ export default function BottomNav({ activeTab, onTabChange, onOpenCalculator }: 
 
   return (
     <nav
-      className="fixed left-0 right-0 max-w-[500px] mx-auto bg-white border-t border-gray-100 h-[80px] flex justify-around items-center z-50 pb-safe shadow-lds overflow-visible transition-all duration-300 ease-out"
-      style={{ bottom: 'var(--viewport-bottom-offset, 0px)' }}
+      className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto bg-white border-t border-gray-100 h-[80px] flex justify-around items-center z-50 pb-safe shadow-lds overflow-visible"
     >
       {/* 왼쪽 2개 */}
       {SIDE_ITEMS.map(({ id, label, icon }) => {
