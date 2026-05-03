@@ -122,7 +122,7 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto overscroll-y-contain p-6 space-y-8">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-6 space-y-8">
         {/* 내 가족 코드 섹션 */}
         <section className="bg-gray-50 rounded-lg p-5 text-center border border-gray-100">
           <h4 className="text-[15px] font-bold text-text-main mb-2">나의 가족 참여 코드</h4>
@@ -212,13 +212,13 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
               placeholder="6자리 코드 입력"
               value={inviteCodeInput}
               onChange={(e) => { setInviteCodeInput(e.target.value.toUpperCase()); setJoinError(null); }}
-              className={`flex-1 bg-gray-50 border rounded-sm px-5 py-4 font-bold text-text-main placeholder:text-gray-300 focus:bg-white outline-none transition-all uppercase tracking-widest text-[16px] ${joinError ? 'border-red-300 focus:border-red-400' : 'border-gray-100 focus:border-brand-500'}`}
+              className={`flex-1 min-w-0 bg-gray-50 border rounded-sm px-5 py-4 font-bold text-text-main placeholder:text-gray-300 focus:bg-white outline-none transition-all uppercase tracking-widest text-[16px] ${joinError ? 'border-red-300 focus:border-red-400' : 'border-gray-100 focus:border-brand-500'}`}
               maxLength={6}
             />
             <button
               onClick={handleJoin}
               disabled={joinLoading}
-              className="bg-gray-900 text-white px-8 rounded-sm font-bold text-[14px] active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[88px]"
+              className="bg-gray-900 text-white px-4 rounded-sm font-bold text-[14px] active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[72px]"
             >
               {joinLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
