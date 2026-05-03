@@ -12,13 +12,21 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { db } from '../../services/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
+interface FamilyData {
+  familyId: string;
+  ownerId: string;
+  inviteCode: string;
+  members: Record<string, string>;
+  createdAt: unknown;
+}
+
 interface FamilyManagementOverlayProps {
   onClose: () => void;
 }
 
 export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = ({ onClose }) => {
   const { user } = useAuthStore();
-  const [familyData, setFamilyData] = useState<any>(null);
+  const [familyData, setFamilyData] = useState<FamilyData | null>(null);
   const [inviteCodeInput, setInviteCodeInput] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -120,16 +128,25 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
           <h4 className="text-[15px] font-bold text-text-main mb-2">나의 가족 참여 코드</h4>
           <p className="text-[12px] font-medium text-text-muted mb-8 leading-relaxed">다른 가족에게 이 코드를 공유하여 <br /> 실시간으로 기록을 함께 보세요.</p>
 
-          <div className="bg-white rounded-lg p-8 border border-gray-100 shadow-sm relative overflow-hidden min-h-[120px] flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 border border-gray-100 shadow-sm relative overflow-hidden min-h-[96px] flex items-center justify-center">
             {loading ? (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-6 h-6 border-3 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-[12px] font-bold text-brand-300">연결 확인 중...</span>
+              <div className="flex gap-2 items-center justify-center">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-11 h-14 bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center animate-pulse">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                  </div>
+                ))}
               </div>
             ) : (
-              <span className="text-[36px] font-bold text-text-main tracking-[0.2em] leading-none">
-                {familyData?.inviteCode || '...'}
-              </span>
+              <div className="flex gap-2 items-center justify-center">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-11 h-14 bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center">
+                    <span className="text-[22px] font-bold text-text-main">
+                      {familyData?.inviteCode?.[i] ?? ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
             {!loading && (
               <button
@@ -142,6 +159,45 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
           </div>
           {isCopied && <p className="text-brand-500 text-[11px] font-bold mt-4 animate-pulse">코드가 클립보드에 복사되었습니다!</p>}
         </section>
+
+        {/* 연결된 가족 */}
+        {!loading && (
+          <section className="space-y-4">
+            <h4 className="text-[15px] font-bold text-text-main flex items-center gap-2">
+              <HugeiconsIcon icon={UserGroupIcon} size={18} className="text-brand-500" strokeWidth={2.5} />
+              연결된 가족
+            </h4>
+
+            <div className="bg-white rounded-lg border border-gray-100 shadow-lds p-4 flex items-center gap-3">
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName ?? '나'}
+                  className="w-11 h-11 rounded-full border border-gray-100 shadow-sm shrink-0 object-cover"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-brand-500 flex items-center justify-center shrink-0">
+                  <span className="text-[18px] font-bold text-white">
+                    {user?.displayName?.charAt(0).toUpperCase() ?? '나'}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-text-main truncate">{user?.displayName ?? '나'}</p>
+                <p className="text-[11px] font-medium text-text-muted">나의 계정</p>
+              </div>
+              <span className="px-2 py-0.5 bg-brand-50 text-brand-600 text-[11px] font-bold rounded-sm border border-brand-100 shrink-0">소유자</span>
+            </div>
+
+            {Object.keys(familyData?.members ?? {}).length <= 1 && (
+              <div className="bg-gray-50 rounded-lg border border-gray-100 p-5 text-center">
+                <p className="text-[12px] font-medium text-text-muted leading-relaxed">
+                  아직 연결된 가족이 없어요.<br />위의 코드를 공유해 보세요.
+                </p>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* 코드 입력하여 참여하기 */}
         <section className="space-y-4">

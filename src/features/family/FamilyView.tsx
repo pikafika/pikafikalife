@@ -4,7 +4,6 @@ import {
   UserGroupIcon,
   PlayIcon,
   StickyNote01Icon,
-  Share01Icon,
   Message01Icon,
   Clock01Icon,
   Calendar01Icon
@@ -12,7 +11,11 @@ import {
 import { twMerge } from 'tailwind-merge';
 import { useHistoryStore } from '../../store/useHistoryStore';
 
-export const FamilyView: React.FC = () => {
+interface FamilyViewProps {
+  onOpenFamilyMgmt: () => void;
+}
+
+export const FamilyView = ({ onOpenFamilyMgmt }: FamilyViewProps) => {
   const { logs } = useHistoryStore();
   const recentLogs = logs.slice(0, 5);
   const [toast, setToast] = useState<string | null>(null);
@@ -36,10 +39,11 @@ export const FamilyView: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-[22px] font-bold text-text-main">가족 대시보드</h2>
           <button
-            onClick={() => showToast('공유 기능을 곧 출시할게요!')}
-            className="p-3 bg-brand-50 text-brand-500 rounded-sm active:scale-95 transition-all outline-none border border-brand-100"
+            onClick={onOpenFamilyMgmt}
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-50 text-brand-600 rounded-sm active:scale-95 transition-all outline-none border border-brand-100 font-bold text-[13px]"
           >
-            <HugeiconsIcon icon={Share01Icon} size={20} strokeWidth={2.5} />
+            <HugeiconsIcon icon={UserGroupIcon} size={18} strokeWidth={2.5} />
+            관리
           </button>
         </div>
 

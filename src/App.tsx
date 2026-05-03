@@ -70,7 +70,7 @@ function App() {
       case 'history':
         return <History />;
       case 'family':
-        return <FamilyView />;
+        return <FamilyView onOpenFamilyMgmt={() => setIsFamilyMgmtOpen(true)} />;
       case 'settings':
         return <Settings />;
       default:

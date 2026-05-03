@@ -5,7 +5,7 @@
 PikafikaLife(피카피카 라이프)는 1형 당뇨 환자를 위한 정밀 인슐린 계산 및 건강 관리 플랫폼이다.
 **인슐린 투여 오류는 생명에 직결된다.** 모든 계산 변경, 설정 수정, 데이터 저장 결정은 임상적 위험을 수반한다.
 
-- **서비스 URL**: https://pikafikalife.web.app
+- **서비스 URL**: https://pikafika.vercel.app (Vercel — 프론트엔드 + API 통합)
 - **스택**: React 18 + TypeScript 5 + Zustand + Firebase Firestore + Gemini AI + Vite
 - **배포**: Vercel 서버리스 (`api/*`) + Firebase Hosting (프론트엔드)
 
@@ -270,3 +270,32 @@ npm run build    # tsc + vite build
 npm run test     # vitest (calcIOB.test.ts — 항상 통과 유지)
 npm run preview  # 프로덕션 빌드 미리보기
 ```
+
+---
+
+## 배포 트리거
+
+사용자가 아래 문장 중 하나를 입력하거나 `/deploy`를 입력하면 즉시 배포 시퀀스를 실행한다:
+- "배포 진행해 줘" / "배포해 줘" / "배포 실행해 줘" / "배포 해줘"
+
+**배포 시퀀스 (순서대로 실행)**:
+1. `npm run build` — 실패 시 즉시 중단하고 에러 보고
+2. 미커밋 변경사항이 있으면 `git add <변경 파일>` + `git commit`
+3. `git push origin main` — Vercel이 GitHub 연동으로 자동 배포 (~23초)
+4. 배포 완료 URL 보고: https://pikafika.vercel.app
+
+> Firebase Hosting(`pikafikalife.web.app`)은 사용하지 않는다.
+> Vercel만이 `api/gemini.ts` 서버리스 함수를 포함한 전체 앱을 서빙한다.
+
+---
+
+## 세션 저장 규칙
+
+세션 요약을 저장할 때는 반드시 프로젝트 내 아래 경로를 사용한다:
+
+```
+logs/sessions/YYYY-MM-DD-session.md
+```
+
+- `~/.claude/session-data/` 에는 저장하지 않는다.
+- 사용자가 "세션 저장해 줘" 또는 유사한 문장을 입력하면 위 경로에 저장한다.
