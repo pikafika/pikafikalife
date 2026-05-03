@@ -28,10 +28,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "서버 설정 오류가 발생했습니다." });
 
   const { type, image, mode, userContext, logs } = req.body;
+  const safeLogs = Array.isArray(logs) ? logs.slice(0, 20) : [];
   const MODEL_NAME = "gemini-2.5-flash";
 
   try {
@@ -76,8 +77,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     } else if (type === "insights" || type === "coaching") {
       const prompt = type === "insights"
-        ? `Analyze these logs for a diabetic: ${JSON.stringify(logs)}. Return 4 insights in JSON array.`
-        : `Provide coaching: ${JSON.stringify(logs)}. Korean.`;
+        ? `Analyze these logs for a diabetic: ${JSON.stringify(safeLogs)}. Return 4 insights in JSON array.`
+        : `Provide coaching: ${JSON.stringify(safeLogs)}. Korean.`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${apiKey}`,

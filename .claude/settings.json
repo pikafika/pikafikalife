@@ -1,0 +1,54 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=(i.tool_input&&i.tool_input.command)||'';const isDeployCmd=/firebase\\s+deploy|git\\s+push\\s+origin\\s+main/.test(cmd);if(isDeployCmd){process.stderr.write('\\n[DEPLOY GATE] 배포 전 /security-reviewer 검토 필수!\\napi/, firestore.rules, useAuthStore.ts 대상으로 실행 후 배포하세요.\\n보안 검토가 완료된 경우 사용자가 직접 확인 후 진행하세요.\\n');process.exit(2);}process.stdout.write(d);})\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const f=(i.tool_input&&(i.tool_input.file_path||''))||'';const c=(i.tool_input&&(i.tool_input.content||i.tool_input.new_string||''))||'';const isSettings=f.includes('settings.json');const isEnvFile=f.endsWith('.env')||f.endsWith('.env.local')||f.endsWith('.env.example');const isViteConfig=f.includes('vite.config');const KEY='VITE_GEMINI_API_KEY';if(!isSettings&&!isEnvFile&&!isViteConfig&&c.includes(KEY)){process.stderr.write('\\n[SECURITY BLOCK] '+KEY+' 를 소스 파일에 넣을 수 없습니다.\\nGEMINI_API_KEY는 api/gemini.ts에서 process.env.GEMINI_API_KEY로만 사용하세요.\\n');process.exit(2);}process.stdout.write(d);})\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const f=(i.tool_input&&(i.tool_input.file_path||''))||'';if(f.includes('calcIOB')||f.includes('useInsulinCalc')){process.stderr.write('\\n[MEDICAL SAFETY] 인슐린 계산 파일이 수정되었습니다.\\n→ 구현 완료 후 반드시 /healthcare-reviewer를 실행하세요.\\n→ npm test로 모든 IOB 테스트가 통과하는지 확인하세요.\\n');}process.stdout.write(d);})\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const f=(i.tool_input&&(i.tool_input.file_path||''))||'';if(f.includes('firestore.rules')){process.stderr.write('\\n[FIRESTORE CHANGE] firestore.rules가 수정되었습니다.\\n→ /database-reviewer와 /security-reviewer를 병렬로 실행하세요.\\n→ 두 리뷰 모두 통과 전까지 배포하지 마세요.\\n');}process.stdout.write(d);})\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm test -- --reporter=verbose 2>&1 | tail -20"
+          }
+        ]
+      }
+    ]
+  }
+}

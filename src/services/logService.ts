@@ -50,15 +50,16 @@ export class LogService {
       friendlyMessage
     };
 
-    // 서버로 로그 전송 (비동기)
-    fetch('/api/logs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newLog)
-    }).catch(err => {
-      // 서버 전송 실패 시 콘솔에만 출력
-      console.error('Failed to send log to server:', err);
-    });
+    // 서버로 로그 전송 (개발 환경에서만)
+    if (import.meta.env.DEV) {
+      fetch('/api/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLog)
+      }).catch(err => {
+        console.error('Failed to send log to server:', err);
+      });
+    }
     
     if (import.meta.env.DEV) {
       if (log.type === 'error') {

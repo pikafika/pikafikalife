@@ -25,6 +25,9 @@ QA 에이전트의 APPROVE 승인을 받은 후에만 배포를 진행한다.
 ## 배포 전제 조건 (체크리스트)
 
 ```
+□ [STEP 0 — 필수] /security-reviewer 보안 검토 PASS
+  대상: api/, firestore.rules, src/store/useAuthStore.ts
+  → CRITICAL/HIGH 이슈 없음 확인 후에만 다음 단계 진행
 □ QA 에이전트 APPROVE 확인
 □ npm run build 성공
 □ npm test 전체 통과 (calcIOB.test.ts 포함)

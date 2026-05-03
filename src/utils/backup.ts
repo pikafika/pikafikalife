@@ -12,7 +12,7 @@ interface BackupData {
 const SETTINGS_RANGES = {
   icr:      { min: 1,  max: 100 },
   isf:      { min: 1,  max: 500 },
-  targetBG: { min: 60, max: 300 },
+  targetBG: { min: 60, max: 200 },
   dia:      { min: 1,  max: 8   },
 } as const;
 
