@@ -124,40 +124,41 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
 
       <div className="flex-1 overflow-y-auto overscroll-y-contain p-6 space-y-8">
         {/* 내 가족 코드 섹션 */}
-        <section className="bg-gray-50 rounded-lg p-8 text-center border border-gray-100">
+        <section className="bg-gray-50 rounded-lg p-5 text-center border border-gray-100">
           <h4 className="text-[15px] font-bold text-text-main mb-2">나의 가족 참여 코드</h4>
-          <p className="text-[12px] font-medium text-text-muted mb-8 leading-relaxed">다른 가족에게 이 코드를 공유하여 <br /> 실시간으로 기록을 함께 보세요.</p>
+          <p className="text-[12px] font-medium text-text-muted mb-5 leading-relaxed">다른 가족에게 이 코드를 공유하여 <br /> 실시간으로 기록을 함께 보세요.</p>
 
-          <div className="bg-white rounded-lg p-6 border border-gray-100 shadow-sm relative overflow-hidden min-h-[96px] flex items-center justify-center">
+          <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm space-y-3">
             {loading ? (
-              <div className="flex gap-2 items-center justify-center">
+              <div className="grid grid-cols-6 gap-1.5">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-11 h-14 bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center animate-pulse">
+                  <div key={i} className="h-12 bg-gray-100 border border-gray-200 rounded-md flex items-center justify-center animate-pulse">
                     <div className="w-2 h-2 bg-gray-300 rounded-full" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex gap-2 items-center justify-center">
+              <div className="grid grid-cols-6 gap-1.5">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-11 h-14 bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center">
-                    <span className="text-[22px] font-bold text-text-main">
+                  <div key={i} className="h-12 bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center">
+                    <span className="text-[20px] font-bold text-text-main">
                       {familyData?.inviteCode?.[i] ?? ''}
                     </span>
                   </div>
                 ))}
               </div>
             )}
+
             {!loading && (
               <button
                 onClick={handleCopyCode}
-                className="absolute right-3 bottom-3 w-10 h-10 bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center text-brand-500 active:scale-90 transition-all hover:border-brand-200 hover:bg-brand-50"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 border border-gray-200 rounded-md font-bold text-[13px] active:scale-95 transition-all hover:bg-brand-50 hover:border-brand-200 hover:text-brand-500 text-gray-500"
               >
-                <HugeiconsIcon icon={isCopied ? CheckmarkBadge01Icon : Copy01Icon} size={18} strokeWidth={2.5} />
+                <HugeiconsIcon icon={isCopied ? CheckmarkBadge01Icon : Copy01Icon} size={16} strokeWidth={2.5} className={isCopied ? 'text-brand-500' : ''} />
+                {isCopied ? '복사됨!' : '코드 복사하기'}
               </button>
             )}
           </div>
-          {isCopied && <p className="text-brand-500 text-[11px] font-bold mt-4 animate-pulse">코드가 클립보드에 복사되었습니다!</p>}
         </section>
 
         {/* 연결된 가족 */}
