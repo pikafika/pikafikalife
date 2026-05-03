@@ -69,7 +69,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         throw new Error("AI 서비스에 일시적인 오류가 발생했습니다.");
       }
 
-      const text = data.candidates[0].content.parts[0].text;
+      const candidate = data.candidates?.[0];
+      if (!candidate) throw new Error("AI 응답이 안전 필터에 의해 차단되었습니다.");
+      const text = candidate.content.parts[0].text;
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       const cleanJson = jsonMatch ? jsonMatch[0] : text.trim();
 
@@ -92,7 +94,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       );
 
       const data = await response.json();
-      const text = data.candidates[0].content.parts[0].text;
+      const candidate = data.candidates?.[0];
+      if (!candidate) throw new Error("AI 응답이 안전 필터에 의해 차단되었습니다.");
+      const text = candidate.content.parts[0].text;
 
       if (type === "insights") {
         const jsonMatch = text.match(/\[[\s\S]*\]/);

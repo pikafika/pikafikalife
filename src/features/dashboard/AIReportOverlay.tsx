@@ -33,7 +33,7 @@ export const AIReportOverlay: React.FC<AIReportOverlayProps> = ({ onClose, stats
     const fetchReport = async () => {
       const service = getGeminiService();
       if (!service) {
-        setReport('Gemini API 키가 설정되지 않았거나 불러올 수 없습니다. .env 파일에 VITE_GEMINI_API_KEY가 있는지 확인해 주세요.');
+        setReport('AI 서비스 연결에 실패했습니다. 서버 설정을 확인해 주세요.');
         setIsLoading(false);
         return;
       }
