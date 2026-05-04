@@ -169,7 +169,7 @@ export default function Settings() {
                   type="number"
                   value={formData.icr}
                   onChange={(e) => setFormData({ ...formData, icr: Number(e.target.value) })}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-base"
                   placeholder="10"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-bold text-text-muted">g/u</span>
@@ -192,7 +192,7 @@ export default function Settings() {
                   type="number"
                   value={formData.isf}
                   onChange={(e) => setFormData({ ...formData, isf: Number(e.target.value) })}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-base"
                   placeholder="50"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-bold text-text-muted">mg/dL</span>
@@ -210,7 +210,7 @@ export default function Settings() {
                     type="number"
                     value={formData.targetBG}
                     onChange={(e) => setFormData({ ...formData, targetBG: Number(e.target.value) })}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-base"
                     placeholder="120"
                   />
                   <span className="absolute right-10 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-muted">mg/dL</span>
@@ -228,7 +228,7 @@ export default function Settings() {
                     value={formData.dia}
                     step="0.5"
                     onChange={(e) => setFormData({ ...formData, dia: Number(e.target.value) })}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-[15px]"
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-transparent rounded-sm focus:bg-white focus:border-brand-500 focus:outline-none font-bold text-text-main transition-all text-base"
                     placeholder="4"
                   />
                   <span className="absolute right-10 top-1/2 -translate-y-1/2 text-[10px] font-bold text-text-muted">시간</span>

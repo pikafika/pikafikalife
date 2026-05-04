@@ -107,7 +107,7 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
             <input
               type="text"
               placeholder="음식 검색..."
-              className="w-full bg-slate-50/50 rounded-2xl py-4 pl-12 pr-12 focus:outline-none focus:ring-4 focus:ring-brand-50/50 focus:bg-white border border-slate-100 transition-all font-bold text-[15px]"
+              className="w-full bg-slate-50/50 rounded-2xl py-4 pl-12 pr-12 focus:outline-none focus:ring-4 focus:ring-brand-50/50 focus:bg-white border border-slate-100 transition-all font-bold text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

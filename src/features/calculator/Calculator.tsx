@@ -286,7 +286,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ onClose, onTabChange }) 
                 <span className="text-text-sub font-black text-[14px]">참고 메모</span>
               </div>
               <textarea
-                className="w-full bg-white border border-gray-100 rounded-[32px] p-6 focus:ring-4 focus:ring-brand-50 focus:border-brand-500 outline-none transition-all shadow-premium text-[14px] font-bold min-h-[120px]"
+                className="w-full bg-white border border-gray-100 rounded-[32px] p-6 focus:ring-4 focus:ring-brand-50 focus:border-brand-500 outline-none transition-all shadow-premium text-base font-bold min-h-[120px]"
                 placeholder="식사 종류나 컨디션 등 기록하고 싶은 내용을 적어주세요."
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}

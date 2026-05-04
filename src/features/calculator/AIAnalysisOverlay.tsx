@@ -557,7 +557,7 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
                 value={userContext}
                 onChange={(e) => setUserContext(e.target.value)}
                 placeholder={mode === 'food' ? "예: '아주 맵게 먹어요', '소스는 절반만 넣었어요'" : "예: '절반은 남겼어요', '우유와 함께 먹어요'"}
-                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all min-h-[80px]"
+                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-base font-bold outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all min-h-[80px]"
               />
             </div>
 

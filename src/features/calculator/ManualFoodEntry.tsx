@@ -78,7 +78,7 @@ export const ManualFoodEntry: React.FC<ManualFoodEntryProps> = ({ onClose, onAdd
             <input
               type="text"
               placeholder="예: 집밥 (된장찌개와 밥)"
-              className="w-full bg-slate-50 rounded-2xl py-4 px-5 focus:outline-none focus:ring-4 focus:ring-brand-50 border border-slate-100 font-bold text-[15px]"
+              className="w-full bg-slate-50 rounded-2xl py-4 px-5 focus:outline-none focus:ring-4 focus:ring-brand-50 border border-slate-100 font-bold text-base"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -94,7 +94,7 @@ export const ManualFoodEntry: React.FC<ManualFoodEntryProps> = ({ onClose, onAdd
               <input
                 type="text"
                 placeholder="예: 현미밥 150g"
-                className="flex-1 bg-slate-50 rounded-2xl py-4 px-5 focus:outline-none focus:ring-4 focus:ring-brand-50 border border-slate-100 font-bold text-[15px]"
+                className="flex-1 bg-slate-50 rounded-2xl py-4 px-5 focus:outline-none focus:ring-4 focus:ring-brand-50 border border-slate-100 font-bold text-base"
                 value={currentIngredient}
                 onChange={(e) => setCurrentIngredient(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddIngredient()}
@@ -150,7 +150,7 @@ export const ManualFoodEntry: React.FC<ManualFoodEntryProps> = ({ onClose, onAdd
             </label>
             <textarea
               placeholder="예: 소스가 달아요, 평소보다 짜게 먹었어요 등"
-              className="w-full bg-slate-50 rounded-2xl py-4 px-5 focus:outline-none focus:ring-4 focus:ring-brand-50 border border-slate-100 font-bold text-[14px] min-h-[100px]"
+              className="w-full bg-slate-50 rounded-2xl py-4 px-5 focus:outline-none focus:ring-4 focus:ring-brand-50 border border-slate-100 font-bold text-base min-h-[100px]"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
             />
