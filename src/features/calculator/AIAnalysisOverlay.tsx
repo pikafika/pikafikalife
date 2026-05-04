@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { 
-  Cancel01Icon, 
-  Camera01Icon, 
+import {
+  Cancel01Icon,
+  Camera01Icon,
   CheckmarkBadge01Icon,
   AiChat02Icon,
   ZapIcon,
@@ -14,7 +14,8 @@ import {
   Note01Icon,
   ArrowRight01Icon,
   ReloadIcon,
-  FlashIcon
+  FlashIcon,
+  PencilEdit01Icon
 } from '@hugeicons/core-free-icons';
 import { Food } from '../../types';
 import { twMerge } from 'tailwind-merge';
@@ -69,12 +70,35 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
   const [error, setError] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
 
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addCustomFood } = useCustomFoodStore();
+  const { addCustomFood, customFoods } = useCustomFoodStore();
 
-  const totalCarbs = mode === 'food' 
+  const savedAiFoods = useMemo(() => customFoods.filter(f => f.cat === 'ai'), [customFoods]);
+
+  const handleSaveItemName = (idx: number) => {
+    if (!editingName.trim()) { setEditingIdx(null); return; }
+    const item = detectedItems[idx];
+    const newName = editingName.trim();
+    setDetectedItems(prev => prev.map((it, i) => i === idx ? { ...it, name: newName } : it));
+    addCustomFood({
+      name: newName,
+      emoji: item.icon || '🍴',
+      carbPer: item.carbs,
+      baseAmount: item.amount,
+      unit: item.unit,
+      cat: 'ai',
+      note: 'AI 분석 보정 재료'
+    });
+    setEditingIdx(null);
+    setEditingName('');
+  };
+
+  const totalCarbs = mode === 'food'
     ? detectedItems.reduce((acc, item) => acc + item.carbs, 0)
     : (labelData?.totalCarbs || 0) * servingCount;
 
@@ -298,7 +322,7 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
 
       {/* 전역 에러 토스트 (어떤 단계에서도 보이도록 최상단 배치) */}
       {error && (
-        <div className="absolute top-12 left-6 right-6 z-[2000] animate-in slide-in-from-top-10 duration-700">
+        <div className="absolute top-[64px] left-6 right-6 z-[2000] animate-in slide-in-from-top-10 duration-700">
           <div className="bg-slate-900/95 backdrop-blur-xl text-white p-6 rounded-[32px] shadow-2xl flex flex-col gap-3 border border-red-500/50">
             <div className="flex items-center gap-3 text-red-400">
               <HugeiconsIcon icon={InformationCircleIcon} size={24} />
@@ -316,7 +340,7 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
       )}
 
       {/* 상단 헤더 */}
-      <div className="px-6 pt-12 pb-6 flex items-center justify-between text-text-main bg-white/80 backdrop-blur-md border-b border-slate-50 sticky top-0 z-50">
+      <div className="h-[64px] px-4 flex items-center justify-between text-text-main bg-white border-b border-slate-100 shrink-0 z-50">
         <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center active:scale-90 transition-all">
           <HugeiconsIcon icon={Cancel01Icon} size={20} className="text-text-sub" />
         </button>
@@ -443,21 +467,17 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
 
       {step === 'review' && (
         <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden animate-in slide-in-from-bottom-10 duration-700">
-          <div className="bg-gradient-to-br from-brand-600 via-brand-500 to-brand-400 p-5 pt-6 rounded-b-[32px] shadow-xl text-white relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-             <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1.5 opacity-80">
-                <HugeiconsIcon icon={AiChat02Icon} size={14} />
-                <span className="text-[11px] font-black">AI 분석 결과</span>
+          <div className="flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 space-y-4">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+              <div className="flex items-center gap-2 mb-2">
+                <HugeiconsIcon icon={AiChat02Icon} size={14} className="text-brand-500" />
+                <span className="text-[11px] font-black text-brand-500">AI 분석 결과</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-[30px] font-black">{totalCarbs.toFixed(0)}</span>
-                <span className="text-[16px] font-black opacity-80">g 탄수화물</span>
+                <span className="text-[30px] font-black text-text-main">{totalCarbs.toFixed(0)}</span>
+                <span className="text-[16px] font-black text-text-muted">g 탄수화물</span>
               </div>
-             </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 space-y-4">
+            </div>
             {/* AI 조언 */}
             {aiAdvice && (
               <div className="flex items-start gap-2.5 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
@@ -485,12 +505,46 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
 
               {mode === 'food' ? (
                 <div className="space-y-4">
+                  {savedAiFoods.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-black text-text-muted px-1">저장된 재료 빠른 선택</p>
+                      <div className="flex flex-wrap gap-2">
+                        {savedAiFoods.slice(0, 8).map(f => (
+                          <button
+                            key={f.id}
+                            onClick={() => setDetectedItems(prev => [...prev, { id: `saved_${Date.now()}`, name: f.name, amount: f.baseAmount, unit: f.unit, carbs: f.carbPer, icon: f.emoji }])}
+                            className="bg-brand-50 text-brand-600 px-3 py-1.5 rounded-xl text-[12px] font-black border border-brand-100 flex items-center gap-1.5 active:scale-95 transition-transform"
+                          >
+                            <span>{f.emoji}</span>{f.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {detectedItems.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between py-1">
-                      <div className="flex items-center gap-4">
-                        <span className="text-[26px]">{item.icon || '🍴'}</span>
-                        <div>
-                          <div className="text-[15px] font-black text-text-main">{item.name}</div>
+                      <div className="flex items-center gap-4 flex-1 min-w-0 mr-3">
+                        <span className="text-[26px] shrink-0">{item.icon || '🍴'}</span>
+                        <div className="min-w-0 flex-1">
+                          {editingIdx === idx ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editingName}
+                              onChange={e => setEditingName(e.target.value)}
+                              onBlur={() => handleSaveItemName(idx)}
+                              onKeyDown={e => { if (e.key === 'Enter') handleSaveItemName(idx); if (e.key === 'Escape') { setEditingIdx(null); setEditingName(''); } }}
+                              className="text-base font-black text-text-main bg-slate-50 rounded-lg px-2 py-1 border border-brand-300 outline-none w-full"
+                            />
+                          ) : (
+                            <button
+                              onClick={() => { setEditingIdx(idx); setEditingName(item.name); }}
+                              className="text-[15px] font-black text-text-main text-left flex items-center gap-1 w-full"
+                            >
+                              <span className="truncate">{item.name}</span>
+                              <HugeiconsIcon icon={PencilEdit01Icon} size={12} className="text-text-muted opacity-50 shrink-0" />
+                            </button>
+                          )}
                           <div className="text-[12px] font-bold text-text-muted">{item.amount}{item.unit}</div>
                         </div>
                       </div>
