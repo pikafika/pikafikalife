@@ -72,6 +72,10 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
 
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [editingCarbsIdx, setEditingCarbsIdx] = useState<number | null>(null);
+  const [editingCarbs, setEditingCarbs] = useState('');
+  const [editingLabel, setEditingLabel] = useState<'productName' | 'totalCarbs' | 'sugars' | null>(null);
+  const [editingLabelValue, setEditingLabelValue] = useState('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -96,6 +100,29 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
     });
     setEditingIdx(null);
     setEditingName('');
+  };
+
+  const handleSaveItemCarbs = (idx: number) => {
+    const val = parseFloat(editingCarbs);
+    if (!isNaN(val) && val >= 0) {
+      setDetectedItems(prev => prev.map((it, i) => i === idx ? { ...it, carbs: sanitizeCarbs(val) } : it));
+    }
+    setEditingCarbsIdx(null);
+    setEditingCarbs('');
+  };
+
+  const handleSaveLabelField = () => {
+    if (!editingLabel || !labelData) { setEditingLabel(null); return; }
+    const numVal = parseFloat(editingLabelValue);
+    if (editingLabel === 'productName') {
+      setLabelData(prev => prev ? { ...prev, productName: editingLabelValue.trim() || prev.productName } : prev);
+    } else if (editingLabel === 'totalCarbs' && !isNaN(numVal) && numVal >= 0) {
+      setLabelData(prev => prev ? { ...prev, totalCarbs: sanitizeCarbs(numVal) } : prev);
+    } else if (editingLabel === 'sugars' && !isNaN(numVal) && numVal >= 0) {
+      setLabelData(prev => prev ? { ...prev, sugars: sanitizeCarbs(numVal) } : prev);
+    }
+    setEditingLabel(null);
+    setEditingLabelValue('');
   };
 
   const totalCarbs = mode === 'food'
@@ -546,6 +573,28 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
                             </button>
                           )}
                           <div className="text-[12px] font-bold text-text-muted">{item.amount}{item.unit}</div>
+                          {editingCarbsIdx === idx ? (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <input
+                                autoFocus
+                                type="number"
+                                value={editingCarbs}
+                                onChange={e => setEditingCarbs(e.target.value)}
+                                onBlur={() => handleSaveItemCarbs(idx)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleSaveItemCarbs(idx); if (e.key === 'Escape') { setEditingCarbsIdx(null); setEditingCarbs(''); } }}
+                                className="text-base font-black w-16 bg-slate-50 rounded-lg px-2 py-0.5 border border-brand-300 outline-none"
+                              />
+                              <span className="text-[11px] font-black text-brand-500">g 탄수화물</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setEditingCarbsIdx(idx); setEditingCarbs(String(item.carbs)); }}
+                              className="text-[11px] font-black text-brand-500 flex items-center gap-0.5 mt-0.5"
+                            >
+                              {item.carbs.toFixed(0)}g 탄수화물
+                              <HugeiconsIcon icon={PencilEdit01Icon} size={10} className="opacity-50" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center bg-slate-50 rounded-2xl p-1 gap-3 border border-slate-100">
@@ -566,9 +615,55 @@ export const AIAnalysisOverlay: React.FC<AIAnalysisOverlayProps> = ({ onClose, o
                   {labelData && (
                     <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                       <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[24px]">📦</div>
-                      <div className="flex-1">
-                        <div className="text-[15px] font-black text-text-main">{labelData.productName || '가공식품'}</div>
-                        <div className="text-[12px] font-bold text-text-muted">당류 {labelData.sugars}g 포함</div>
+                      <div className="flex-1 min-w-0">
+                        {editingLabel === 'productName' ? (
+                          <input autoFocus type="text" value={editingLabelValue}
+                            onChange={e => setEditingLabelValue(e.target.value)}
+                            onBlur={handleSaveLabelField}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveLabelField(); if (e.key === 'Escape') setEditingLabel(null); }}
+                            className="text-base font-black bg-white rounded-lg px-2 py-0.5 border border-brand-300 outline-none w-full"
+                          />
+                        ) : (
+                          <button onClick={() => { setEditingLabel('productName'); setEditingLabelValue(labelData.productName || ''); }}
+                            className="text-[15px] font-black text-text-main flex items-center gap-1 w-full text-left">
+                            <span className="truncate">{labelData.productName || '가공식품'}</span>
+                            <HugeiconsIcon icon={PencilEdit01Icon} size={12} className="text-text-muted opacity-50 shrink-0" />
+                          </button>
+                        )}
+                        {editingLabel === 'totalCarbs' ? (
+                          <div className="flex items-center gap-1 mt-1">
+                            <input autoFocus type="number" value={editingLabelValue}
+                              onChange={e => setEditingLabelValue(e.target.value)}
+                              onBlur={handleSaveLabelField}
+                              onKeyDown={e => { if (e.key === 'Enter') handleSaveLabelField(); if (e.key === 'Escape') setEditingLabel(null); }}
+                              className="text-base font-black w-16 bg-white rounded-lg px-2 py-0.5 border border-brand-300 outline-none"
+                            />
+                            <span className="text-[11px] font-black text-brand-500">g 탄수화물</span>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setEditingLabel('totalCarbs'); setEditingLabelValue(String(labelData.totalCarbs)); }}
+                            className="text-[12px] font-bold text-brand-500 flex items-center gap-1 mt-1">
+                            탄수화물 {labelData.totalCarbs}g
+                            <HugeiconsIcon icon={PencilEdit01Icon} size={10} className="opacity-40" />
+                          </button>
+                        )}
+                        {editingLabel === 'sugars' ? (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <input autoFocus type="number" value={editingLabelValue}
+                              onChange={e => setEditingLabelValue(e.target.value)}
+                              onBlur={handleSaveLabelField}
+                              onKeyDown={e => { if (e.key === 'Enter') handleSaveLabelField(); if (e.key === 'Escape') setEditingLabel(null); }}
+                              className="text-base font-black w-16 bg-white rounded-lg px-2 py-0.5 border border-brand-300 outline-none"
+                            />
+                            <span className="text-[11px] font-black text-text-muted">g 당류</span>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setEditingLabel('sugars'); setEditingLabelValue(String(labelData.sugars || 0)); }}
+                            className="text-[12px] font-bold text-text-muted flex items-center gap-1 mt-0.5">
+                            당류 {labelData.sugars}g 포함
+                            <HugeiconsIcon icon={PencilEdit01Icon} size={10} className="opacity-40" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
