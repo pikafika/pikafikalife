@@ -1,12 +1,13 @@
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  onSnapshot, 
-  collection, 
-  query, 
-  orderBy, 
-  limit, 
+import {
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  onSnapshot,
+  collection,
+  query,
+  orderBy,
+  limit,
   where,
   runTransaction,
   writeBatch
@@ -63,9 +64,43 @@ export class SyncService {
   /**
    * 초대 코드로 가족 그룹 가입
    */
-  static async joinFamilyByCode(_uid: string, _inviteCode: string) {
-    // TODO: 초대 코드로 가족 그룹 가입 기능 미구현
-    if (!db) return;
+  static async joinFamilyByCode(uid: string, inviteCode: string): Promise<
+    { success: true; familyId: string } |
+    { success: false; error: 'not_found' | 'already_member' | 'has_family' | 'db_error' }
+  > {
+    if (!db) return { success: false, error: 'db_error' };
+
+    try {
+      const userDocRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const currentFamilyId = userDoc.data().familyId as string | undefined;
+        if (currentFamilyId && currentFamilyId !== `fam_${uid}`) {
+          return { success: false, error: 'has_family' };
+        }
+      }
+
+      const q = query(collection(db, 'families'), where('inviteCode', '==', inviteCode.toUpperCase()));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return { success: false, error: 'not_found' };
+
+      const familyDoc = snapshot.docs[0];
+      const targetFamilyId = familyDoc.id;
+      const members = familyDoc.data().members as Record<string, string>;
+
+      if (uid in members) return { success: false, error: 'already_member' };
+
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'families', targetFamilyId), { [`members.${uid}`]: 'member' });
+      batch.set(userDocRef, { familyId: targetFamilyId }, { merge: true });
+      await batch.commit();
+
+      return { success: true, familyId: targetFamilyId };
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      console.error('[SyncService] joinFamilyByCode 오류:', err.code, err.message);
+      return { success: false, error: 'db_error' };
+    }
   }
 
   /**

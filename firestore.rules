@@ -1,23 +1,42 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
+    function canJoin(uid, before, after) {
+      let notMember = !(uid in before.members);
+      let onlyMembersChanged = after.diff(before).affectedKeys().hasOnly(['members']);
+      let noMembersRemoved = after.members.keys().hasAll(before.members.keys());
+      let newKeys = after.members.keys().removeAll(before.members.keys());
+      let onlyJoinerAdded = newKeys.size() == 1 && newKeys.hasAll([uid]);
+      let roleIsValid = after.members[uid] == 'member';
+      return notMember && onlyMembersChanged && noMembersRemoved && onlyJoinerAdded && roleIsValid;
+    }
+
     // 1. users 컬렉션 규칙: 자기 자신의 데이터만 읽고 쓰기 가능
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // 2. families 컬렉션 규칙: 본인이 소속된 가족 그룹만 읽기, 소유자만 수정/삭제
+    // 2. families 컬렉션 규칙
     match /families/{familyId} {
-      allow read: if request.auth != null && request.auth.uid in resource.data.members;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      // 개별 문서 읽기: 멤버만
+      allow get: if request.auth != null && request.auth.uid in resource.data.members;
+      // 목록 쿼리: 인증된 사용자 (inviteCode로 가족 검색용)
+      allow list: if request.auth != null;
+      // 생성: 본인 가족 문서만
       allow create: if request.auth != null
         && familyId == ('fam_' + request.auth.uid)
         && request.resource.data.ownerId == request.auth.uid;
+      // 삭제: 소유자만
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      // 수정: 소유자 전체 수정 OR canJoin 조건 충족 시 멤버 추가
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.ownerId
+        || canJoin(request.auth.uid, resource.data, request.resource.data)
+      );
 
-      // 3. 가족 그룹 내부의 logs(혈당 등 기록) 서브컬렉션 규칙
+      // 3. 가족 그룹 내부의 logs 서브컬렉션 규칙
       match /logs/{logId} {
-        // members면 열람 및 새 기록 작성 가능, 수정/삭제는 소유자만
         allow read, create: if request.auth != null &&
           request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
         allow update, delete: if request.auth != null &&

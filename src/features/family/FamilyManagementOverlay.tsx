@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '../../store/useAuthStore';
 import { db } from '../../services/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { SyncService } from '../../services/syncService';
 
 interface FamilyData {
   familyId: string;
@@ -33,6 +34,8 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
   const [joinError, setJoinError] = useState<string | null>(null);
   const [joinLoading, setJoinLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [failCount, setFailCount] = useState(0);
+  const MAX_ATTEMPTS = 3;
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -89,17 +92,44 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
     }
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     setJoinError(null);
-    if (inviteCodeInput.length !== 6) {
+    if (inviteCodeInput.trim().length !== 6) {
       setJoinError('6자리 코드를 입력해 주세요.');
       return;
     }
+    if (failCount >= MAX_ATTEMPTS) {
+      setJoinError('잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    if (!user) return;
+
     setJoinLoading(true);
-    setTimeout(() => {
-      setJoinLoading(false);
-      showToast('가족 연결 기능을 곧 출시할게요! 🙌');
-    }, 600);
+    const result = await SyncService.joinFamilyByCode(user.uid, inviteCodeInput.trim());
+    setJoinLoading(false);
+
+    if (result.success) {
+      showToast('가족이 연결됐어요! 잠시 후 새로고침됩니다. 🎉');
+      setTimeout(() => window.location.reload(), 1500);
+      return;
+    }
+
+    const newCount = failCount + 1;
+    setFailCount(newCount);
+    const suffix = newCount >= MAX_ATTEMPTS ? ' 잠시 후 다시 시도해 주세요.' : '';
+    switch (result.error) {
+      case 'not_found':
+        setJoinError('코드가 맞지 않아요. 다시 확인해 주세요.' + suffix);
+        break;
+      case 'already_member':
+        setJoinError('이미 연결된 가족이에요.');
+        break;
+      case 'has_family':
+        setJoinError('이미 다른 가족에 연결되어 있어요.');
+        break;
+      default:
+        setJoinError('오류가 발생했어요. 잠시 후 다시 시도해 주세요.');
+    }
   };
 
   return (
@@ -200,7 +230,8 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
           </section>
         )}
 
-        {/* 코드 입력하여 참여하기 */}
+        {/* 코드 입력하여 참여하기 — 이미 다른 가족에 소속된 경우 숨김 */}
+        {(!familyData || Object.keys(familyData.members).length <= 1) && (
         <section className="space-y-4">
           <h4 className="text-[15px] font-bold text-text-main flex items-center gap-2">
             <HugeiconsIcon icon={Link01Icon} size={18} className="text-brand-500" strokeWidth={2.5} />
@@ -217,7 +248,7 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
             />
             <button
               onClick={handleJoin}
-              disabled={joinLoading}
+              disabled={joinLoading || failCount >= MAX_ATTEMPTS}
               className="bg-gray-900 text-white px-4 rounded-sm font-bold text-[14px] active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[72px]"
             >
               {joinLoading ? (
@@ -229,6 +260,7 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
             <p className="text-red-500 text-[12px] font-bold pl-1">{joinError}</p>
           )}
         </section>
+        )}
 
         {/* 도움말 */}
         <div className="bg-brand-50/50 rounded-lg p-5 flex gap-3 border border-brand-100">
