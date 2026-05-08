@@ -18,6 +18,9 @@ import {
   Alert01Icon
 } from '@hugeicons/core-free-icons';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useUserStore } from '../../store/useUserStore';
+import { getGeminiService } from '../../services/geminiService';
+import type { InsightStory } from '../../data/insights_db';
 import { SeedingCard } from '../../components/SeedingCard';
 import { twMerge } from 'tailwind-merge';
 import { isAdmin } from '../../utils/permissions';
@@ -36,10 +39,32 @@ const Dashboard: React.FC<DashboardProps> = ({
   onOpenFamilyMgmt 
 }) => {
   const { logs } = useHistoryStore();
-  const { insights } = useAIStore();
+  const { insights, lastUpdate, isGenerating, setInsights, setGenerating, updateRefreshTime } = useAIStore();
   const { user } = useAuthStore();
+  const { settings } = useUserStore();
   
   const [isBGExplanationOpen, setIsBGExplanationOpen] = useState(false);
+
+  useEffect(() => {
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    const isStale = Date.now() - lastUpdate > TWENTY_FOUR_HOURS;
+    const safeLogs = Array.isArray(logs) ? logs : [];
+
+    if (!user || !isStale || safeLogs.length < 3 || isGenerating) return;
+
+    setGenerating(true);
+    getGeminiService()
+      .generateDailyInsights(safeLogs.slice(0, 20), settings)
+      .then((newInsights: InsightStory[]) => {
+        if (Array.isArray(newInsights) && newInsights.length > 0) {
+          setInsights(newInsights);
+          updateRefreshTime();
+        }
+      })
+      .catch(console.error)
+      .finally(() => setGenerating(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // 로그인 시 1회 체크 — 24시간 경과 + 로그 3개 이상이면 갱신
 
   const { todayLogs, stats, lastBG, streakCount } = useMemo(() => {
     const today = new Date();
