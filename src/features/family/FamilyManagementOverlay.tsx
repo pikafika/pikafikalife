@@ -10,15 +10,15 @@ import {
 } from '@hugeicons/core-free-icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { db } from '../../services/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { SyncService } from '../../services/syncService';
+import type { FamilyData } from '../../types';
 
-interface FamilyData {
-  familyId: string;
-  ownerId: string;
-  inviteCode: string;
-  members: Record<string, string>;
-  createdAt: unknown;
+interface MemberInfo {
+  uid: string;
+  displayName: string;
+  photoURL?: string;
+  role: string;
 }
 
 interface FamilyManagementOverlayProps {
@@ -36,6 +36,7 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
   const [toast, setToast] = useState<string | null>(null);
   const [failCount, setFailCount] = useState(0);
   const MAX_ATTEMPTS = 3;
+  const [memberInfos, setMemberInfos] = useState<MemberInfo[]>([]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -78,6 +79,31 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
       if (unsubscribeFamily) unsubscribeFamily();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!familyData || !db) {
+      setMemberInfos([]);
+      return;
+    }
+    const otherUids = Object.keys(familyData.members).filter(uid => uid !== user?.uid);
+    if (otherUids.length === 0) {
+      setMemberInfos([]);
+      return;
+    }
+    const firestoreDb = db;
+    Promise.all(
+      otherUids.map(async (uid) => {
+        const snap = await getDoc(doc(firestoreDb, 'users', uid));
+        const data = snap.exists() ? snap.data() : null;
+        return {
+          uid,
+          displayName: data?.displayName ?? '가족',
+          photoURL: data?.photoURL as string | undefined,
+          role: familyData.members[uid],
+        } satisfies MemberInfo;
+      })
+    ).then(setMemberInfos);
+  }, [familyData, user?.uid]);
 
   const handleCopyCode = () => {
     if (familyData?.inviteCode) {
@@ -220,7 +246,30 @@ export const FamilyManagementOverlay: React.FC<FamilyManagementOverlayProps> = (
               <span className="px-2 py-0.5 bg-brand-50 text-brand-600 text-[11px] font-bold rounded-sm border border-brand-100 shrink-0">소유자</span>
             </div>
 
-            {Object.keys(familyData?.members ?? {}).length <= 1 && (
+            {memberInfos.map((member) => (
+              <div key={member.uid} className="bg-white rounded-lg border border-gray-100 shadow-lds p-4 flex items-center gap-3">
+                {member.photoURL ? (
+                  <img
+                    src={member.photoURL}
+                    alt={member.displayName}
+                    className="w-11 h-11 rounded-full border border-gray-100 shadow-sm shrink-0 object-cover"
+                  />
+                ) : (
+                  <div className="w-11 h-11 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                    <span className="text-[18px] font-bold text-gray-500">
+                      {member.displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-text-main truncate">{member.displayName}</p>
+                  <p className="text-[11px] font-medium text-text-muted">연결된 가족</p>
+                </div>
+                <span className="px-2 py-0.5 bg-gray-50 text-gray-500 text-[11px] font-bold rounded-sm border border-gray-200 shrink-0">가족</span>
+              </div>
+            ))}
+
+            {memberInfos.length === 0 && (
               <div className="bg-gray-50 rounded-lg border border-gray-100 p-5 text-center">
                 <p className="text-[12px] font-medium text-text-muted leading-relaxed">
                   아직 연결된 가족이 없어요.<br />위의 코드를 공유해 보세요.

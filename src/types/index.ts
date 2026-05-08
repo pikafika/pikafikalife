@@ -41,6 +41,17 @@ export interface LogEntry {
 }
 
 /**
+ * 가족 그룹 인터페이스
+ */
+export interface FamilyData {
+  familyId: string;
+  ownerId: string;
+  inviteCode: string;
+  members: Record<string, string>;
+  createdAt: unknown;
+}
+
+/**
  * 사용자 개인 설정 인터페이스
  */
 export interface UserSettings {
