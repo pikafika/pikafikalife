@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { 
-  Search01Icon, 
-  PlusSignIcon, 
-  MinusSignIcon, 
-  Cancel01Icon, 
+import {
+  Search01Icon,
+  PlusSignIcon,
+  MinusSignIcon,
+  Cancel01Icon,
   Camera01Icon,
   FilterIcon,
   Dish01Icon,
@@ -47,9 +47,10 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
 
   const filteredFoods = useMemo(() => {
     return allFoods.filter((food) => {
-      const matchesSearch = food.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = activeCategory === 'all' || food.cat === activeCategory;
-      return matchesSearch && matchesCategory;
+      if (searchTerm) {
+        return food.name.toLowerCase().includes(searchTerm.toLowerCase());
+      }
+      return activeCategory === 'all' || food.cat === activeCategory;
     });
   }, [allFoods, searchTerm, activeCategory]);
 
@@ -79,24 +80,26 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
 
   return (
     <>
-      {/* 검색 및 AI 버튼 섹션 - 레이어 통합을 위해 스타일 및 패딩 조정 */}
-      <div className="px-4 py-4 space-y-4 bg-white relative z-10">
-        {/* AI 분석 버튼 (Premium UI) */}
-        <button 
-          onClick={onOpenAI}
-          className="w-full bg-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-brand-500/20 shadow-lg">
-              <HugeiconsIcon icon={Camera01Icon} size={22} className="text-brand-500" strokeWidth={2.5} />
+      {/* 검색 및 AI 버튼 섹션 */}
+      <div className="px-4 py-4 space-y-3 bg-white relative z-10">
+        {/* AI 분석 버튼 — 검색 중 숨김 */}
+        {!searchTerm && (
+          <button
+            onClick={onOpenAI}
+            className="w-full bg-brand-50 rounded-3xl p-4 flex items-center justify-between border border-brand-100/50 group active:scale-95 transition-all shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-brand-500/20 shadow-lg">
+                <HugeiconsIcon icon={Camera01Icon} size={22} className="text-brand-500" strokeWidth={2.5} />
+              </div>
+              <div className="text-left">
+                <div className="text-[15px] font-black text-brand-600">AI 사진으로 분석하기</div>
+                <div className="text-[12px] font-bold text-brand-400">카메라로 식단을 바로 인식해요</div>
+              </div>
             </div>
-            <div className="text-left">
-              <div className="text-[15px] font-black text-brand-600">AI 사진으로 분석하기</div>
-              <div className="text-[12px] font-bold text-brand-400">카메라로 식단을 바로 인식해요</div>
-            </div>
-          </div>
-          <div className="bg-brand-500 text-white px-3 py-1.5 rounded-xl text-[11px] font-black animate-pulse">PRO</div>
-        </button>
+            <div className="bg-brand-500 text-white px-3 py-1.5 rounded-xl text-[11px] font-black animate-pulse">PRO</div>
+          </button>
+        )}
 
         {/* 검색창 및 직접 입력 */}
         <div className="flex gap-2">
@@ -106,7 +109,7 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
             </div>
             <input
               type="text"
-              placeholder="음식 검색..."
+              placeholder="음식 이름으로 검색..."
               className="w-full bg-slate-50/50 rounded-2xl py-4 pl-12 pr-12 focus:outline-none focus:ring-4 focus:ring-brand-50/50 focus:bg-white border border-slate-100 transition-all font-bold text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -120,19 +123,27 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
               </button>
             )}
           </div>
-          <button 
+          <button
             onClick={onOpenManual}
-            className="px-6 bg-white border border-slate-100 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all"
+            className="px-5 bg-white border border-slate-100 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all shrink-0"
           >
             <HugeiconsIcon icon={PlusSignIcon} size={18} className="text-brand-500" strokeWidth={3} />
             <span className="text-[14px] font-black text-text-main whitespace-nowrap">직접 입력</span>
           </button>
         </div>
+
+        {/* 검색 결과 카운트 */}
+        {searchTerm && (
+          <p className="text-[12px] font-bold text-text-muted px-1">
+            '<span className="text-brand-500">{searchTerm}</span>' 검색 결과{' '}
+            <span className="text-text-main">{filteredFoods.length}개</span>
+          </p>
+        )}
       </div>
 
-      {/* 카테고리 필터 - Sticky 적용 */}
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-50 mb-6">
-        <div className="relative group">
+      {/* 카테고리 필터 — 검색 중 숨김 */}
+      {!searchTerm && (
+        <div className="sticky top-0 z-40 bg-white border-b border-slate-50 mb-6">
           <div className="flex overflow-x-auto py-4 no-scrollbar">
             <div className="flex pl-4 pr-4 gap-2.5">
               {CATEGORIES.map((cat) => (
@@ -153,11 +164,11 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="px-4 pb-8">
-        {/* 오늘의 레시피 조합 (선택된 음식) - 가로 슬라이드바 형식 */}
-        {selectedFoods.length > 0 && (
+      <div className={twMerge("px-4 pb-8", searchTerm && "pt-2")}>
+        {/* 식사 구성 미리보기 — 검색 중 숨김 */}
+        {!searchTerm && selectedFoods.length > 0 && (
           <div className="mb-10 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-center justify-between mb-4 px-1">
               <div className="flex items-center gap-2">
@@ -168,21 +179,21 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
                 {selectedFoods.length}개 선택됨
               </span>
             </div>
-            
+
             <div className="flex overflow-x-auto px-6 gap-4 no-scrollbar pb-2">
               {selectedFoods.map((food) => (
                 <div key={food.id} className="flex-shrink-0 w-[180px] bg-white border border-slate-100 p-5 rounded-[32px] shadow-premium relative group">
-                  <button 
+                  <button
                     onClick={() => handleRemoveFood(food.id)}
                     className="absolute -top-2 -right-2 w-8 h-8 bg-warm-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20"
                   >
                     <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={3} />
                   </button>
-                  
+
                   <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-[28px] mb-4 group-hover:scale-110 transition-transform">
                     {food.emoji}
                   </div>
-                  
+
                   <div className="mb-4 h-10">
                     <div className="font-black text-text-main text-[14px] line-clamp-2 leading-tight">{food.name}</div>
                   </div>
@@ -208,11 +219,14 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
           </div>
         )}
 
-        {/* 음식 검색 결과 */}
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <HugeiconsIcon icon={Dish01Icon} size={18} className="text-brand-500" strokeWidth={2.5} />
-          <h3 className="text-[15px] font-black text-text-main">음식 선택하기</h3>
-        </div>
+        {/* 음식 목록 헤더 — 검색 중 숨김 */}
+        {!searchTerm && (
+          <div className="flex items-center gap-2 mb-4 px-1">
+            <HugeiconsIcon icon={Dish01Icon} size={18} className="text-brand-500" strokeWidth={2.5} />
+            <h3 className="text-[15px] font-black text-text-main">음식 선택하기</h3>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-3">
           {filteredFoods.map((food) => {
             const isSelected = selectedFoods.some((f) => f.id === food.id);
@@ -260,7 +274,11 @@ export const FoodSearch: React.FC<FoodSearchProps> = ({ onFoodsChange, selectedF
           })}
           {filteredFoods.length === 0 && (
             <div className="text-center py-16 bg-slate-50/50 rounded-4xl border border-dashed border-slate-200">
-              <p className="text-text-muted font-bold">음식을 찾을 수 없어요 🥘 <br /> <span className="text-[12px] opacity-60">직접 추가하거나 다른 이름으로 검색해보세요</span></p>
+              <p className="text-text-muted font-bold">
+                {searchTerm ? `'${searchTerm}'에 해당하는 음식이 없어요` : '음식을 찾을 수 없어요 🥘'}
+                <br />
+                <span className="text-[12px] opacity-60">직접 추가하거나 다른 이름으로 검색해보세요</span>
+              </p>
             </div>
           )}
         </div>
