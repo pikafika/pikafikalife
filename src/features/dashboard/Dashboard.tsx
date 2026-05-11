@@ -15,7 +15,8 @@ import {
   Cancel01Icon,
   ArrowDown01Icon,
   ArrowUp01Icon,
-  Alert01Icon
+  Alert01Icon,
+  LockKeyIcon
 } from '@hugeicons/core-free-icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUserStore } from '../../store/useUserStore';
@@ -40,10 +41,31 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const { logs } = useHistoryStore();
   const { insights, lastUpdate, isGenerating, setInsights, setGenerating, updateRefreshTime } = useAIStore();
-  const { user } = useAuthStore();
+  const { user, login } = useAuthStore();
   const { settings } = useUserStore();
-  
+
   const [isBGExplanationOpen, setIsBGExplanationOpen] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleLogin = async () => {
+    if (loginLoading) return;
+    setLoginLoading(true);
+    try {
+      await login();
+      showToast('✅ 로그인되었습니다. 이제 기록이 안전하게 저장돼요.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.';
+      showToast(msg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   useEffect(() => {
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
@@ -102,6 +124,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="flex flex-col space-y-8 pb-20">
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-text-main text-white text-[13px] font-bold rounded-md shadow-xl">
+          {toast}
+        </div>
+      )}
+
       {/* 헤더 & 프로필 */}
       <section className="px-2">
         <div className="flex items-center justify-between mb-6 pt-4">
@@ -118,6 +146,41 @@ const Dashboard: React.FC<DashboardProps> = ({
             </span>
           </div>
         </div>
+
+        {/* 비로그인 안내 카드 */}
+        {!user && (
+          <div className="mb-6 bg-white rounded-lg shadow-lds border border-gray-100 overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-brand-500" />
+            <div className="p-5 pt-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-md bg-brand-50 flex items-center justify-center flex-shrink-0">
+                  <HugeiconsIcon icon={LockKeyIcon} size={20} className="text-brand-500" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-[14px] font-bold text-text-main mb-1">로그인이 필요해요</h4>
+                  <p className="text-[12px] font-medium text-text-sub leading-relaxed">
+                    로그인해야 기록이 안전하게 저장되고, 다른 기기에서도 이어볼 수 있어요. 가족과 공유도 가능해요.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogin}
+                disabled={loginLoading}
+                aria-busy={loginLoading}
+                className="w-full py-3 bg-brand-500 text-white rounded-sm font-bold text-[13px] shadow-sm hover:bg-brand-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loginLoading ? (
+                  <span>로그인 중...</span>
+                ) : (
+                  <>
+                    <span className="text-[14px]">G</span>
+                    <span>Google로 로그인</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 가족 공유 안내 */}
         {user && (
